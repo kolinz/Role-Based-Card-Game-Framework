@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理画面 - カードゲーム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-container h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 16px;
+        }
+
+        .admin-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #d97706 100%);
+        }
+
+        .card-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .card-item {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .card-preview {
+            width: 80px;
+            height: 112px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .card-info h3 {
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 5px;
+        }
+
+        .card-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .lang-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div id="loginScreen" class="login-container">
+        <h1>🔐 管理者ログイン</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>ユーザー名</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label>パスワード</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">ログイン</button>
+        </form>
+        <p style="margin-top: 20px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+            デフォルト: admin / admin123
+        </p>
+    </div>
+
+    <!-- 管理画面 -->
+    <div id="adminScreen" style="display: none;">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h1>📊 管理画面</h1>
+                <button class="logout-btn" onclick="logout()">ログアウト</button>
+            </div>
+
+            <div class="stats" id="stats"></div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('jobs')">職種カード</button>
+                <button class="tab" onclick="showTab('skills')">スキルカード</button>
+                <button class="tab" onclick="showTab('missions')">ミッションカード</button>
+                <button class="tab" onclick="showTab('categories')">カテゴリ</button>
+            </div>
+
+            <div id="jobs-tab" class="tab-content active">
+                <button class="btn btn-success" onclick="openAddModal('job')" style="margin-bottom: 20px;">+ 新しい職種カードを追加</button>
+                <div id="jobs-list" class="card-list"></div>
+            </div>
+
+            <div id="skills-tab" class="tab-content">
+                <button class="btn btn-success" onclick="openAddModal('skill')" style="margin-bottom: 20px;">+ 新しいスキルカードを追加</button>
+                <div id="skills-list" class="card-list"></div>
+            </div>
+
+            <div id="missions-tab" class="tab-content">
+                <button class="btn btn-success" onclick="openAddModal('mission')" style="margin-bottom: 20px;">+ 新しいミッションカードを追加</button>
+                <div id="missions-list" class="card-list"></div>
+            </div>
+
+            <div id="categories-tab" class="tab-content">
+                <button class="btn btn-success" onclick="openAddModal('category')" style="margin-bottom: 20px;">+ 新しいカテゴリを追加</button>
+                <div id="categories-list" class="card-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">カード編集</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <form id="editForm">
+                <div id="formFields"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">保存</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="flex: 1;">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentEditType = null;
+        let currentEditId = null;
+
+        // ログイン処理
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = username;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminScreen').style.display = 'block';
+                    loadData();
+                } else {
+                    alert('ユーザー名またはパスワードが正しくありません');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('ログインエラーが発生しました');
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('adminScreen').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // タブ切り替え
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // データ読み込み
+        async function loadData() {
+            await loadStats();
+            await loadJobs();
+            await loadSkills();
+            await loadMissions();
+            await loadCategories();
+        }
+
+        async function loadStats() {
+            try {
+                const [jobs, skills, missions, categories] = await Promise.all([
+                    fetch('/api/cards/jobs').then(r => r.json()),
+                    fetch('/api/cards/skills').then(r => r.json()),
+                    fetch('/api/cards/missions').then(r => r.json()),
+                    fetch('/api/categories').then(r => r.json())
+                ]);
+
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <h3>職種カード</h3>
+                        <p>${jobs.length}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>スキルカード</h3>
+                        <p>${skills.length}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>ミッションカード</h3>
+                        <p>${missions.length}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>カテゴリ</h3>
+                        <p>${categories.length}</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadJobs() {
+            const response = await fetch('/api/cards/jobs');
+            const jobs = await response.json();
+            
+            const html = jobs.map(job => `
+                <div class="card-item">
+                    <div class="card-preview">${job.name_ja || job.name_en}</div>
+                    <div class="card-info">
+                        <h3>${job.name_en} / ${job.name_ja}</h3>
+                        <p>職種ID: <strong style="color: var(--primary);">${job.id}</strong> | 目標ポイント: ${job.targetPoints}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn" onclick="editCard('job', ${job.id})">編集</button>
+                        <button class="btn btn-danger" onclick="deleteCard('job', ${job.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('jobs-list').innerHTML = html;
+        }
+
+        async function loadSkills() {
+            const response = await fetch('/api/cards/skills');
+            const skills = await response.json();
+            
+            const html = skills.map(skill => `
+                <div class="card-item">
+                    <div class="card-preview" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">${skill.name_ja || skill.name_en}</div>
+                    <div class="card-info">
+                        <h3>${skill.name_en} / ${skill.name_ja}</h3>
+                        <p>マッチする職種: ${skill.matchesJobs}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn" onclick="editCard('skill', ${skill.id})">編集</button>
+                        <button class="btn btn-danger" onclick="deleteCard('skill', ${skill.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('skills-list').innerHTML = html;
+        }
+
+        async function loadMissions() {
+            const response = await fetch('/api/cards/missions');
+            const missions = await response.json();
+            
+            const html = missions.map(mission => `
+                <div class="card-item">
+                    <div class="card-preview" style="background: ${mission.isSpecial ? 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);'}">${mission.name_ja || mission.name_en || 'Mission'}</div>
+                    <div class="card-info">
+                        <h3>${mission.name_en || 'Mission'} / ${mission.name_ja || 'ミッション'}</h3>
+                        <p>カテゴリID: ${mission.categoryId}${mission.isSpecial ? ' <strong style="color: var(--secondary);">特殊ミッション</strong>' : ''}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn" onclick="editCard('mission', ${mission.id})">編集</button>
+                        <button class="btn btn-danger" onclick="deleteCard('mission', ${mission.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('missions-list').innerHTML = html;
+        }
+
+        async function loadCategories() {
+            const response = await fetch('/api/categories');
+            const categories = await response.json();
+            
+            const html = categories.map(cat => `
+                <div class="card-item">
+                    <div class="card-preview" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">Cat</div>
+                    <div class="card-info">
+                        <h3>${cat.name_en} / ${cat.name_ja}</h3>
+                        <p>Sort: ${cat.sortOrder}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn" onclick="editCard('category', ${cat.id})">編集</button>
+                        <button class="btn btn-danger" onclick="deleteCard('category', ${cat.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('categories-list').innerHTML = html;
+        }
+
+        // 新規追加モーダル
+        function openAddModal(type) {
+            currentEditType = type;
+            currentEditId = null;
+            showEditForm(type, null);
+        }
+
+        // 編集
+        async function editCard(type, id) {
+            currentEditType = type;
+            currentEditId = id;
+            
+            let endpoint = '';
+            if (type === 'job') endpoint = '/api/cards/jobs';
+            else if (type === 'skill') endpoint = '/api/cards/skills';
+            else if (type === 'mission') endpoint = '/api/cards/missions';
+            else if (type === 'category') endpoint = '/api/categories';
+            
+            const response = await fetch(endpoint);
+            const data = await response.json();
+            const item = data.find(d => d.id === id);
+            
+            showEditForm(type, item);
+        }
+
+        function showEditForm(type, data) {
+            const modal = document.getElementById('editModal');
+            const title = document.getElementById('modalTitle');
+            const formFields = document.getElementById('formFields');
+            
+            title.textContent = data ? `${type}を編集` : `新しい${type}を追加`;
+            
+            let fields = '';
+            
+            if (type === 'job') {
+                fields = `
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>名前（英語）</label>
+                            <input type="text" name="name_en" value="${data?.name_en || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>名前（日本語）</label>
+                            <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>画像</label>
+                        <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
+                    </div>
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>説明（英語）</label>
+                            <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>説明（日本語）</label>
+                            <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>目標ポイント</label>
+                        <input type="number" name="targetPoints" value="${data?.targetPoints || 5}" required>
+                    </div>
+                `;
+            } else if (type === 'skill') {
+                fields = `
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>名前（英語）</label>
+                            <input type="text" name="name_en" value="${data?.name_en || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>名前（日本語）</label>
+                            <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>画像</label>
+                        <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
+                    </div>
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>説明（英語）</label>
+                            <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>説明（日本語）</label>
+                            <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>マッチする職種ID（カンマ区切り）</label>
+                        <input type="text" name="matchesJobs" value="${data?.matchesJobs || ''}" placeholder="例: 1,3,4">
+                    </div>
+                `;
+            } else if (type === 'mission') {
+                fields = `
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>名前（英語）</label>
+                            <input type="text" name="name_en" value="${data?.name_en || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>名前（日本語）</label>
+                            <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>画像</label>
+                        <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
+                    </div>
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>説明（英語）</label>
+                            <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>説明（日本語）</label>
+                            <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>カテゴリID</label>
+                        <input type="number" name="categoryId" value="${data?.categoryId || 1}">
+                    </div>
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>実施対象（英語）</label>
+                            <input type="text" name="target_en" value="${data?.target_en || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>実施対象（日本語）</label>
+                            <input type="text" name="target_ja" value="${data?.target_ja || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" name="isSpecial" ${data?.isSpecial ? 'checked' : ''}>
+                            特殊ミッション（退職＆強制兼任）
+                        </label>
+                    </div>
+                `;
+            } else if (type === 'category') {
+                fields = `
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>名前（英語）</label>
+                            <input type="text" name="name_en" value="${data?.name_en || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>名前（日本語）</label>
+                            <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
+                        </div>
+                    </div>
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>説明（英語）</label>
+                            <textarea name="description_en">${data?.description_en || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>説明（日本語）</label>
+                            <textarea name="description_ja">${data?.description_ja || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ソート順</label>
+                        <input type="number" name="sortOrder" value="${data?.sortOrder || 1}">
+                    </div>
+                `;
+            }
+            
+            formFields.innerHTML = fields;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        // フォーム送信
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            let endpoint = '';
+            if (currentEditType === 'job') endpoint = '/api/admin/jobs';
+            else if (currentEditType === 'skill') endpoint = '/api/admin/skills';
+            else if (currentEditType === 'mission') endpoint = '/api/admin/missions';
+            else if (currentEditType === 'category') endpoint = '/api/admin/categories';
+            
+            const method = currentEditId ? 'PUT' : 'POST';
+            const url = currentEditId ? `${endpoint}/${currentEditId}` : endpoint;
+            
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    loadData();
+                    alert('保存しました');
+                } else {
+                    alert('エラーが発生しました');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            }
+        });
+
+        // 画像アップロード処理
+        function handleImageUpload(event, targetInputId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // ファイルサイズチェック（20MB以下）
+            if (file.size > 20 * 1024 * 1024) {
+                alert('画像サイズは20MB以下にしてください');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // 画像をリサイズ（最大800x800px）
+                    const maxSize = 800;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = height * (maxSize / width);
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = width * (maxSize / height);
+                            height = maxSize;
+                        }
+                    }
+                    
+                    // Canvasで画像を描画
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // JPEG品質75%でBase64エンコード
+                    const resizedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                    
+                    // サイズチェック（Base64で2MB以下）
+                    if (resizedBase64.length > 2 * 1024 * 1024 * 1.37) {
+                        // さらに品質を下げる
+                        const finalBase64 = canvas.toDataURL('image/jpeg', 0.5);
+                        document.getElementById(targetInputId).value = finalBase64;
+                    } else {
+                        document.getElementById(targetInputId).value = resizedBase64;
+                    }
+                    
+                    // プレビュー表示を更新
+                    const container = document.getElementById(targetInputId).parentElement;
+                    let preview = container.querySelector('img');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.style.maxWidth = '100px';
+                        preview.style.marginTop = '10px';
+                        preview.style.borderRadius = '8px';
+                        container.appendChild(preview);
+                    }
+                    preview.src = document.getElementById(targetInputId).value;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 画像アップロード処理関数を追加
+        async function deleteCard(type, id) {
+            if (!confirm('本当に削除しますか？')) return;
+            
+            let endpoint = '';
+            if (type === 'job') endpoint = '/api/admin/jobs';
+            else if (type === 'skill') endpoint = '/api/admin/skills';
+            else if (type === 'mission') endpoint = '/api/admin/missions';
+            else if (type === 'category') endpoint = '/api/admin/categories';
+            
+            try {
+                const response = await fetch(`${endpoint}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadData();
+                    alert('削除しました');
+                } else {
+                    alert('エラーが発生しました');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            }
+        }
+    </script>
+</body>
+</html>
