@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理画面 - カードゲーム</title>
+    <title id="page-title">Admin Dashboard - Card Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -69,6 +69,34 @@
         .admin-header h1 {
             font-family: 'Outfit', sans-serif;
             font-size: 2rem;
+        }
+
+        .lang-toggle {
+            display: inline-flex;
+            gap: 10px;
+            padding: 8px;
+            background: var(--bg-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-left: 20px;
+        }
+
+        .lang-toggle button {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .lang-toggle button.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
         }
 
         .tabs {
@@ -302,87 +330,226 @@
     </style>
 </head>
 <body>
-    <!-- ログイン画面 -->
+    <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <h1>🔐 管理者ログイン</h1>
+        <h1 id="login-title">🔐 Admin Login</h1>
         <form id="loginForm">
             <div class="form-group">
-                <label>ユーザー名</label>
+                <label id="username-label">Username</label>
                 <input type="text" id="username" required>
             </div>
             <div class="form-group">
-                <label>パスワード</label>
+                <label id="password-label">Password</label>
                 <input type="password" id="password" required>
             </div>
-            <button type="submit" class="btn" style="width: 100%;">ログイン</button>
+            <button type="submit" class="btn" style="width: 100%;" id="login-btn">Login</button>
         </form>
-        <p style="margin-top: 20px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-            デフォルト: admin / admin123
+        <p id="default-credentials" style="margin-top: 20px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+            Default: admin / admin123
         </p>
+        <div class="lang-toggle" style="margin-top: 20px; display: flex; justify-content: center;">
+            <button class="active" data-lang="en">English</button>
+            <button data-lang="ja">日本語</button>
+        </div>
     </div>
 
-    <!-- 管理画面 -->
+    <!-- Admin Screen -->
     <div id="adminScreen" style="display: none;">
         <div class="admin-container">
             <div class="admin-header">
-                <h1>📊 管理画面</h1>
-                <button class="logout-btn" onclick="logout()">ログアウト</button>
+                <div style="display: flex; align-items: center;">
+                    <h1 id="admin-title">📊 Admin Dashboard</h1>
+                    <div class="lang-toggle">
+                        <button data-lang="en">English</button>
+                        <button class="active" data-lang="ja">日本語</button>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()" id="logout-btn">Logout</button>
             </div>
 
             <div class="stats" id="stats"></div>
 
             <div class="tabs">
-                <button class="tab active" onclick="showTab('jobs')">職種カード</button>
-                <button class="tab" onclick="showTab('skills')">スキルカード</button>
-                <button class="tab" onclick="showTab('missions')">ミッションカード</button>
-                <button class="tab" onclick="showTab('categories')">カテゴリ</button>
+                <button class="tab active" onclick="showTab('jobs')" id="tab-jobs">Job Cards</button>
+                <button class="tab" onclick="showTab('skills')" id="tab-skills">Skill Cards</button>
+                <button class="tab" onclick="showTab('missions')" id="tab-missions">Mission Cards</button>
+                <button class="tab" onclick="showTab('categories')" id="tab-categories">Categories</button>
             </div>
 
             <div id="jobs-tab" class="tab-content active">
-                <button class="btn btn-success" onclick="openAddModal('job')" style="margin-bottom: 20px;">+ 新しい職種カードを追加</button>
+                <button class="btn btn-success" onclick="openAddModal('job')" style="margin-bottom: 20px;" id="add-job-btn">+ Add New Job Card</button>
                 <div id="jobs-list" class="card-list"></div>
             </div>
 
             <div id="skills-tab" class="tab-content">
-                <button class="btn btn-success" onclick="openAddModal('skill')" style="margin-bottom: 20px;">+ 新しいスキルカードを追加</button>
+                <button class="btn btn-success" onclick="openAddModal('skill')" style="margin-bottom: 20px;" id="add-skill-btn">+ Add New Skill Card</button>
                 <div id="skills-list" class="card-list"></div>
             </div>
 
             <div id="missions-tab" class="tab-content">
-                <button class="btn btn-success" onclick="openAddModal('mission')" style="margin-bottom: 20px;">+ 新しいミッションカードを追加</button>
+                <button class="btn btn-success" onclick="openAddModal('mission')" style="margin-bottom: 20px;" id="add-mission-btn">+ Add New Mission Card</button>
                 <div id="missions-list" class="card-list"></div>
             </div>
 
             <div id="categories-tab" class="tab-content">
-                <button class="btn btn-success" onclick="openAddModal('category')" style="margin-bottom: 20px;">+ 新しいカテゴリを追加</button>
+                <button class="btn btn-success" onclick="openAddModal('category')" style="margin-bottom: 20px;" id="add-category-btn">+ Add New Category</button>
                 <div id="categories-list" class="card-list"></div>
             </div>
         </div>
     </div>
 
-    <!-- 編集モーダル -->
+    <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">カード編集</h2>
+                <h2 id="modalTitle">Edit Card</h2>
                 <button class="close-btn" onclick="closeModal()">×</button>
             </div>
             <form id="editForm">
                 <div id="formFields"></div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success" style="flex: 1;">保存</button>
-                    <button type="button" class="btn" onclick="closeModal()" style="flex: 1;">キャンセル</button>
+                    <button type="submit" class="btn btn-success" style="flex: 1;" id="save-btn">Save</button>
+                    <button type="button" class="btn" onclick="closeModal()" style="flex: 1;" id="cancel-btn">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // ====== I18n System ======
+        class I18n {
+            constructor() {
+                this.translations = {};
+                this.currentLang = localStorage.getItem('admin_language') || 
+                                  (navigator.language.startsWith('ja') ? 'ja' : 'en');
+            }
+
+            async init() {
+                await this.loadTranslations(this.currentLang);
+                this.watchLanguageChange();
+                this.updateUI();
+            }
+
+            async loadTranslations(lang) {
+                try {
+                    const response = await fetch(`/api/lang/${lang}`);
+                    const data = await response.json();
+                    if (data.ok) {
+                        this.translations = data.translations;
+                        this.currentLang = lang;
+                        localStorage.setItem('admin_language', lang);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Failed to load translations:', error);
+                }
+                return false;
+            }
+
+            t(key) {
+                const keys = key.split('.');
+                let value = this.translations;
+                for (const k of keys) {
+                    value = value?.[k];
+                }
+                return value || key;
+            }
+
+            async setLanguage(lang) {
+                const success = await this.loadTranslations(lang);
+                if (success) {
+                    this.updateUI();
+                    document.getElementById('page-title').textContent = this.t('admin.pageTitle');
+                }
+            }
+
+            updateUI() {
+                // Update login screen
+                const loginTitle = document.getElementById('login-title');
+                if (loginTitle) loginTitle.textContent = '🔐 ' + this.t('admin.loginTitle');
+                
+                const usernameLabel = document.getElementById('username-label');
+                if (usernameLabel) usernameLabel.textContent = this.t('admin.username');
+                
+                const passwordLabel = document.getElementById('password-label');
+                if (passwordLabel) passwordLabel.textContent = this.t('admin.password');
+                
+                const loginBtn = document.getElementById('login-btn');
+                if (loginBtn) loginBtn.textContent = this.t('admin.loginButton');
+                
+                const defaultCred = document.getElementById('default-credentials');
+                if (defaultCred) defaultCred.textContent = this.t('admin.defaultCredentials');
+
+                // Update admin screen
+                const adminTitle = document.getElementById('admin-title');
+                if (adminTitle) adminTitle.textContent = '📊 ' + this.t('admin.dashboardTitle');
+                
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) logoutBtn.textContent = this.t('admin.logout');
+                
+                const tabJobs = document.getElementById('tab-jobs');
+                if (tabJobs) tabJobs.textContent = this.t('admin.jobCards');
+                
+                const tabSkills = document.getElementById('tab-skills');
+                if (tabSkills) tabSkills.textContent = this.t('admin.skillCards');
+                
+                const tabMissions = document.getElementById('tab-missions');
+                if (tabMissions) tabMissions.textContent = this.t('admin.missionCards');
+                
+                const tabCategories = document.getElementById('tab-categories');
+                if (tabCategories) tabCategories.textContent = this.t('admin.categories');
+                
+                const addJobBtn = document.getElementById('add-job-btn');
+                if (addJobBtn) addJobBtn.textContent = '+ ' + this.t('admin.addNewJobCard');
+                
+                const addSkillBtn = document.getElementById('add-skill-btn');
+                if (addSkillBtn) addSkillBtn.textContent = '+ ' + this.t('admin.addNewSkillCard');
+                
+                const addMissionBtn = document.getElementById('add-mission-btn');
+                if (addMissionBtn) addMissionBtn.textContent = '+ ' + this.t('admin.addNewMissionCard');
+                
+                const addCategoryBtn = document.getElementById('add-category-btn');
+                if (addCategoryBtn) addCategoryBtn.textContent = '+ ' + this.t('admin.addNewCategory');
+                
+                const saveBtn = document.getElementById('save-btn');
+                if (saveBtn) saveBtn.textContent = this.t('common.save');
+                
+                const cancelBtn = document.getElementById('cancel-btn');
+                if (cancelBtn) cancelBtn.textContent = this.t('common.cancel');
+
+                // Update language toggle buttons
+                document.querySelectorAll('[data-lang]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === this.currentLang);
+                });
+            }
+
+            watchLanguageChange() {
+                window.addEventListener('storage', async (e) => {
+                    if (e.key === 'admin_language' && e.newValue !== this.currentLang) {
+                        await this.loadTranslations(e.newValue);
+                        this.updateUI();
+                        document.getElementById('page-title').textContent = this.t('admin.pageTitle');
+                    }
+                });
+            }
+        }
+
+        const i18n = new I18n();
         let currentUser = null;
         let currentEditType = null;
         let currentEditId = null;
 
-        // ログイン処理
+        // Initialize i18n
+        i18n.init().then(() => {
+            // Language toggle event listeners
+            document.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    i18n.setLanguage(btn.dataset.lang);
+                });
+            });
+        });
+
+        // Login handler
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -397,29 +564,31 @@
 
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.ok && data.token) {
                     currentUser = username;
+                    localStorage.setItem('admin_token', data.token);
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('adminScreen').style.display = 'block';
+                    i18n.updateUI();
                     loadData();
                 } else {
-                    alert('ユーザー名またはパスワードが正しくありません');
+                    alert(data.error?.message || i18n.t('errors.UNAUTHORIZED'));
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                alert('ログインエラーが発生しました');
+                alert(i18n.t('errors.SERVER_ERROR'));
             }
         });
 
         function logout() {
             currentUser = null;
+            localStorage.removeItem('admin_token');
             document.getElementById('loginScreen').style.display = 'block';
             document.getElementById('adminScreen').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
         }
 
-        // タブ切り替え
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -428,7 +597,6 @@
             document.getElementById(tabName + '-tab').classList.add('active');
         }
 
-        // データ読み込み
         async function loadData() {
             await loadStats();
             await loadJobs();
@@ -448,20 +616,20 @@
 
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card">
-                        <h3>職種カード</h3>
-                        <p>${jobs.length}</p>
+                        <h3>${i18n.t('admin.jobCards')}</h3>
+                        <p>${jobs.length || 0}</p>
                     </div>
                     <div class="stat-card">
-                        <h3>スキルカード</h3>
-                        <p>${skills.length}</p>
+                        <h3>${i18n.t('admin.skillCards')}</h3>
+                        <p>${skills.length || 0}</p>
                     </div>
                     <div class="stat-card">
-                        <h3>ミッションカード</h3>
-                        <p>${missions.length}</p>
+                        <h3>${i18n.t('admin.missionCards')}</h3>
+                        <p>${missions.length || 0}</p>
                     </div>
                     <div class="stat-card">
-                        <h3>カテゴリ</h3>
-                        <p>${categories.length}</p>
+                        <h3>${i18n.t('admin.categories')}</h3>
+                        <p>${categories.length || 0}</p>
                     </div>
                 `;
             } catch (error) {
@@ -478,11 +646,11 @@
                     <div class="card-preview">${job.name_ja || job.name_en}</div>
                     <div class="card-info">
                         <h3>${job.name_en} / ${job.name_ja}</h3>
-                        <p>職種ID: <strong style="color: var(--primary);">${job.id}</strong> | 目標ポイント: ${job.targetPoints}</p>
+                        <p>${i18n.t('admin.jobId')}: <strong style="color: var(--primary);">${job.id}</strong> | ${i18n.t('admin.targetPoints')}: ${job.targetPoints}</p>
                     </div>
                     <div class="card-actions">
-                        <button class="btn" onclick="editCard('job', ${job.id})">編集</button>
-                        <button class="btn btn-danger" onclick="deleteCard('job', ${job.id})">削除</button>
+                        <button class="btn" onclick="editCard('job', ${job.id})">${i18n.t('common.edit')}</button>
+                        <button class="btn btn-danger" onclick="deleteCard('job', ${job.id})">${i18n.t('common.delete')}</button>
                     </div>
                 </div>
             `).join('');
@@ -499,11 +667,11 @@
                     <div class="card-preview" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">${skill.name_ja || skill.name_en}</div>
                     <div class="card-info">
                         <h3>${skill.name_en} / ${skill.name_ja}</h3>
-                        <p>マッチする職種: ${skill.matchesJobs}</p>
+                        <p>${i18n.t('admin.matchesJobs')}: ${skill.matchesJobs}</p>
                     </div>
                     <div class="card-actions">
-                        <button class="btn" onclick="editCard('skill', ${skill.id})">編集</button>
-                        <button class="btn btn-danger" onclick="deleteCard('skill', ${skill.id})">削除</button>
+                        <button class="btn" onclick="editCard('skill', ${skill.id})">${i18n.t('common.edit')}</button>
+                        <button class="btn btn-danger" onclick="deleteCard('skill', ${skill.id})">${i18n.t('common.delete')}</button>
                     </div>
                 </div>
             `).join('');
@@ -520,11 +688,11 @@
                     <div class="card-preview" style="background: ${mission.isSpecial ? 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);'}">${mission.name_ja || mission.name_en || 'Mission'}</div>
                     <div class="card-info">
                         <h3>${mission.name_en || 'Mission'} / ${mission.name_ja || 'ミッション'}</h3>
-                        <p>カテゴリID: ${mission.categoryId}${mission.isSpecial ? ' <strong style="color: var(--secondary);">特殊ミッション</strong>' : ''}</p>
+                        <p>${i18n.t('admin.categoryId')}: ${mission.categoryId}${mission.isSpecial ? ' <strong style="color: var(--secondary);">' + i18n.t('admin.specialMission') + '</strong>' : ''}</p>
                     </div>
                     <div class="card-actions">
-                        <button class="btn" onclick="editCard('mission', ${mission.id})">編集</button>
-                        <button class="btn btn-danger" onclick="deleteCard('mission', ${mission.id})">削除</button>
+                        <button class="btn" onclick="editCard('mission', ${mission.id})">${i18n.t('common.edit')}</button>
+                        <button class="btn btn-danger" onclick="deleteCard('mission', ${mission.id})">${i18n.t('common.delete')}</button>
                     </div>
                 </div>
             `).join('');
@@ -541,11 +709,11 @@
                     <div class="card-preview" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">Cat</div>
                     <div class="card-info">
                         <h3>${cat.name_en} / ${cat.name_ja}</h3>
-                        <p>Sort: ${cat.sortOrder}</p>
+                        <p>${i18n.t('admin.sortOrder')}: ${cat.sortOrder}</p>
                     </div>
                     <div class="card-actions">
-                        <button class="btn" onclick="editCard('category', ${cat.id})">編集</button>
-                        <button class="btn btn-danger" onclick="deleteCard('category', ${cat.id})">削除</button>
+                        <button class="btn" onclick="editCard('category', ${cat.id})">${i18n.t('common.edit')}</button>
+                        <button class="btn btn-danger" onclick="deleteCard('category', ${cat.id})">${i18n.t('common.delete')}</button>
                     </div>
                 </div>
             `).join('');
@@ -553,14 +721,12 @@
             document.getElementById('categories-list').innerHTML = html;
         }
 
-        // 新規追加モーダル
         function openAddModal(type) {
             currentEditType = type;
             currentEditId = null;
             showEditForm(type, null);
         }
 
-        // 編集
         async function editCard(type, id) {
             currentEditType = type;
             currentEditId = id;
@@ -583,7 +749,7 @@
             const title = document.getElementById('modalTitle');
             const formFields = document.getElementById('formFields');
             
-            title.textContent = data ? `${type}を編集` : `新しい${type}を追加`;
+            title.textContent = data ? i18n.t('admin.editCard') + ' ' + type : i18n.t('admin.addNew') + ' ' + type;
             
             let fields = '';
             
@@ -591,32 +757,32 @@
                 fields = `
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>名前（英語）</label>
+                            <label>${i18n.t('admin.nameEn')}</label>
                             <input type="text" name="name_en" value="${data?.name_en || ''}" required>
                         </div>
                         <div class="form-group">
-                            <label>名前（日本語）</label>
+                            <label>${i18n.t('admin.nameJa')}</label>
                             <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>画像</label>
+                        <label>${i18n.t('admin.image')}</label>
                         <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
-                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="${i18n.t('admin.imageUrlPlaceholder')}">
                         ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
                     </div>
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>説明（英語）</label>
+                            <label>${i18n.t('admin.descriptionEn')}</label>
                             <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>説明（日本語）</label>
+                            <label>${i18n.t('admin.descriptionJa')}</label>
                             <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>目標ポイント</label>
+                        <label>${i18n.t('admin.targetPoints')}</label>
                         <input type="number" name="targetPoints" value="${data?.targetPoints || 5}" required>
                     </div>
                 `;
@@ -624,81 +790,81 @@
                 fields = `
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>名前（英語）</label>
+                            <label>${i18n.t('admin.nameEn')}</label>
                             <input type="text" name="name_en" value="${data?.name_en || ''}" required>
                         </div>
                         <div class="form-group">
-                            <label>名前（日本語）</label>
+                            <label>${i18n.t('admin.nameJa')}</label>
                             <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>画像</label>
+                        <label>${i18n.t('admin.image')}</label>
                         <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
-                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="${i18n.t('admin.imageUrlPlaceholder')}">
                         ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
                     </div>
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>説明（英語）</label>
+                            <label>${i18n.t('admin.descriptionEn')}</label>
                             <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>説明（日本語）</label>
+                            <label>${i18n.t('admin.descriptionJa')}</label>
                             <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>マッチする職種ID（カンマ区切り）</label>
-                        <input type="text" name="matchesJobs" value="${data?.matchesJobs || ''}" placeholder="例: 1,3,4">
+                        <label>${i18n.t('admin.matchesJobsHint')}</label>
+                        <input type="text" name="matchesJobs" value="${data?.matchesJobs || ''}" placeholder="${i18n.t('admin.matchesJobsPlaceholder')}">
                     </div>
                 `;
             } else if (type === 'mission') {
                 fields = `
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>名前（英語）</label>
+                            <label>${i18n.t('admin.nameEn')}</label>
                             <input type="text" name="name_en" value="${data?.name_en || ''}" required>
                         </div>
                         <div class="form-group">
-                            <label>名前（日本語）</label>
+                            <label>${i18n.t('admin.nameJa')}</label>
                             <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>画像</label>
+                        <label>${i18n.t('admin.image')}</label>
                         <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event, 'imageUrl')">
-                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="または画像URLを入力">
+                        <input type="text" name="imageUrl" id="imageUrl" value="${data?.imageUrl || ''}" placeholder="${i18n.t('admin.imageUrlPlaceholder')}">
                         ${data?.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100px; margin-top: 10px; border-radius: 8px;">` : ''}
                     </div>
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>説明（英語）</label>
+                            <label>${i18n.t('admin.descriptionEn')}</label>
                             <textarea name="descriptionHtml_en" required>${data?.descriptionHtml_en || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>説明（日本語）</label>
+                            <label>${i18n.t('admin.descriptionJa')}</label>
                             <textarea name="descriptionHtml_ja" required>${data?.descriptionHtml_ja || ''}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>カテゴリID</label>
+                        <label>${i18n.t('admin.categoryId')}</label>
                         <input type="number" name="categoryId" value="${data?.categoryId || 1}">
                     </div>
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>実施対象（英語）</label>
+                            <label>${i18n.t('admin.targetEn')}</label>
                             <input type="text" name="target_en" value="${data?.target_en || ''}">
                         </div>
                         <div class="form-group">
-                            <label>実施対象（日本語）</label>
+                            <label>${i18n.t('admin.targetJa')}</label>
                             <input type="text" name="target_ja" value="${data?.target_ja || ''}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" name="isSpecial" ${data?.isSpecial ? 'checked' : ''}>
-                            特殊ミッション（退職＆強制兼任）
+                            ${i18n.t('admin.specialMissionLabel')}
                         </label>
                     </div>
                 `;
@@ -706,26 +872,26 @@
                 fields = `
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>名前（英語）</label>
+                            <label>${i18n.t('admin.nameEn')}</label>
                             <input type="text" name="name_en" value="${data?.name_en || ''}" required>
                         </div>
                         <div class="form-group">
-                            <label>名前（日本語）</label>
+                            <label>${i18n.t('admin.nameJa')}</label>
                             <input type="text" name="name_ja" value="${data?.name_ja || ''}" required>
                         </div>
                     </div>
                     <div class="lang-fields">
                         <div class="form-group">
-                            <label>説明（英語）</label>
+                            <label>${i18n.t('admin.descriptionEn')}</label>
                             <textarea name="description_en">${data?.description_en || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>説明（日本語）</label>
+                            <label>${i18n.t('admin.descriptionJa')}</label>
                             <textarea name="description_ja">${data?.description_ja || ''}</textarea>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>ソート順</label>
+                        <label>${i18n.t('admin.sortOrder')}</label>
                         <input type="number" name="sortOrder" value="${data?.sortOrder || 1}">
                     </div>
                 `;
@@ -739,7 +905,6 @@
             document.getElementById('editModal').classList.remove('show');
         }
 
-        // フォーム送信
         document.getElementById('editForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -755,34 +920,37 @@
             const method = currentEditId ? 'PUT' : 'POST';
             const url = currentEditId ? `${endpoint}/${currentEditId}` : endpoint;
             
+            const token = localStorage.getItem('admin_token');
+            
             try {
                 const response = await fetch(url, {
                     method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify(data)
                 });
                 
                 if (response.ok) {
                     closeModal();
                     loadData();
-                    alert('保存しました');
+                    alert(i18n.t('admin.savedSuccessfully'));
                 } else {
-                    alert('エラーが発生しました');
+                    alert(i18n.t('errors.SERVER_ERROR'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('エラーが発生しました');
+                alert(i18n.t('errors.SERVER_ERROR'));
             }
         });
 
-        // 画像アップロード処理
         function handleImageUpload(event, targetInputId) {
             const file = event.target.files[0];
             if (!file) return;
             
-            // ファイルサイズチェック（20MB以下）
             if (file.size > 20 * 1024 * 1024) {
-                alert('画像サイズは20MB以下にしてください');
+                alert(i18n.t('admin.imageSizeError'));
                 return;
             }
             
@@ -790,7 +958,6 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // 画像をリサイズ（最大800x800px）
                     const maxSize = 800;
                     let width = img.width;
                     let height = img.height;
@@ -807,26 +974,21 @@
                         }
                     }
                     
-                    // Canvasで画像を描画
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    // JPEG品質75%でBase64エンコード
                     const resizedBase64 = canvas.toDataURL('image/jpeg', 0.75);
                     
-                    // サイズチェック（Base64で2MB以下）
                     if (resizedBase64.length > 2 * 1024 * 1024 * 1.37) {
-                        // さらに品質を下げる
                         const finalBase64 = canvas.toDataURL('image/jpeg', 0.5);
                         document.getElementById(targetInputId).value = finalBase64;
                     } else {
                         document.getElementById(targetInputId).value = resizedBase64;
                     }
                     
-                    // プレビュー表示を更新
                     const container = document.getElementById(targetInputId).parentElement;
                     let preview = container.querySelector('img');
                     if (!preview) {
@@ -843,9 +1005,8 @@
             reader.readAsDataURL(file);
         }
 
-        // 画像アップロード処理関数を追加
         async function deleteCard(type, id) {
-            if (!confirm('本当に削除しますか？')) return;
+            if (!confirm(i18n.t('admin.confirmDelete'))) return;
             
             let endpoint = '';
             if (type === 'job') endpoint = '/api/admin/jobs';
@@ -853,20 +1014,25 @@
             else if (type === 'mission') endpoint = '/api/admin/missions';
             else if (type === 'category') endpoint = '/api/admin/categories';
             
+            const token = localStorage.getItem('admin_token');
+            
             try {
                 const response = await fetch(`${endpoint}/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 
                 if (response.ok) {
                     loadData();
-                    alert('削除しました');
+                    alert(i18n.t('admin.deletedSuccessfully'));
                 } else {
-                    alert('エラーが発生しました');
+                    alert(i18n.t('errors.SERVER_ERROR'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('エラーが発生しました');
+                alert(i18n.t('errors.SERVER_ERROR'));
             }
         }
     </script>

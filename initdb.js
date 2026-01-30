@@ -1,3 +1,4 @@
+// FILE: initdb.js
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 
@@ -82,16 +83,16 @@ db.serialize(() => {
 
     // Job cards
     const jobCards = [
-        ['Software Engineer', 'ソフトウェアエンジニア', '/assets/cards/job1.png',
+        ['Software Engineer', 'ソフトウェアエンジニア', null,
          '<p>Develops software applications and systems. Specializes in coding, debugging, and system architecture.</p>',
          '<p>ソフトウェアアプリケーションとシステムを開発します。コーディング、デバッグ、システムアーキテクチャを専門とします。</p>', 5],
-        ['Product Manager', 'プロダクトマネージャー', '/assets/cards/job2.png',
+        ['Product Manager', 'プロダクトマネージャー', null,
          '<p>Manages product development from concept to launch. Coordinates teams and defines product vision.</p>',
          '<p>コンセプトから立ち上げまでの製品開発を管理します。チームを調整し、製品ビジョンを定義します。</p>', 6],
-        ['Data Scientist', 'データサイエンティスト', '/assets/cards/job3.png',
+        ['Data Scientist', 'データサイエンティスト', null,
          '<p>Analyzes complex data to help organizations make decisions. Uses statistics and machine learning.</p>',
          '<p>複雑なデータを分析し、組織の意思決定を支援します。統計学と機械学習を使用します。</p>', 5],
-        ['UX Designer', 'UXデザイナー', '/assets/cards/job4.png',
+        ['UX Designer', 'UXデザイナー', null,
          '<p>Creates user-centered designs for digital products. Focuses on user research and interface design.</p>',
          '<p>デジタル製品のユーザー中心のデザインを作成します。ユーザーリサーチとインターフェースデザインに焦点を当てます。</p>', 5]
     ];
@@ -104,28 +105,28 @@ db.serialize(() => {
 
     // Skill cards
     const skillCards = [
-        ['Python Programming', 'Pythonプログラミング', '/assets/cards/skill1.png',
+        ['Python Programming', 'Pythonプログラミング', null,
          '<p>Proficiency in Python for backend development and data analysis.</p>',
          '<p>バックエンド開発とデータ分析のためのPython習熟度。</p>', '1,3'],
-        ['User Research', 'ユーザーリサーチ', '/assets/cards/skill2.png',
+        ['User Research', 'ユーザーリサーチ', null,
          '<p>Conducting interviews and surveys to understand user needs.</p>',
          '<p>ユーザーのニーズを理解するためのインタビューと調査の実施。</p>', '2,4'],
-        ['Data Visualization', 'データ可視化', '/assets/cards/skill3.png',
+        ['Data Visualization', 'データ可視化', null,
          '<p>Creating charts and dashboards to communicate insights.</p>',
          '<p>インサイトを伝えるためのチャートとダッシュボードの作成。</p>', '3'],
-        ['Agile Methods', 'アジャイル手法', '/assets/cards/skill4.png',
+        ['Agile Methods', 'アジャイル手法', null,
          '<p>Managing projects using Scrum and Kanban methodologies.</p>',
          '<p>ScrumとKanban方法論を使用したプロジェクト管理。</p>', '1,2'],
-        ['Prototyping', 'プロトタイピング', '/assets/cards/skill5.png',
+        ['Prototyping', 'プロトタイピング', null,
          '<p>Building interactive prototypes with Figma and similar tools.</p>',
          '<p>Figmaなどのツールでインタラクティブなプロトタイプを構築。</p>', '4'],
-        ['Machine Learning', '機械学習', '/assets/cards/skill6.png',
+        ['Machine Learning', '機械学習', null,
          '<p>Developing AI models for predictions and automation.</p>',
          '<p>予測と自動化のためのAIモデル開発。</p>', '3'],
-        ['API Design', 'API設計', '/assets/cards/skill7.png',
+        ['API Design', 'API設計', null,
          '<p>Creating RESTful and GraphQL APIs for applications.</p>',
          '<p>アプリケーション用のRESTfulおよびGraphQL APIの作成。</p>', '1'],
-        ['Market Analysis', '市場分析', '/assets/cards/skill8.png',
+        ['Market Analysis', '市場分析', null,
          '<p>Analyzing market trends and competitive landscapes.</p>',
          '<p>市場動向と競合環境の分析。</p>', '2']
     ];
@@ -152,23 +153,23 @@ db.serialize(() => {
 
     // Missions
     const missions = [
-        ['System Down', 'システムダウン', '/assets/cards/mission1.png',
+        ['System Down', 'システムダウン', null,
          '<p>The main system is down during peak hours. How should the team respond?</p>',
          '<p>ピーク時にメインシステムがダウン。チームはどう対応すべきか?</p>', 1,
          'Discuss crisis response strategy', '危機対応戦略を議論', 0],
-        ['Technical Debt vs Features', '技術的負債 vs 新機能', '/assets/cards/mission2.png',
+        ['Technical Debt vs Features', '技術的負債 vs 新機能', null,
          '<p>Engineering wants to fix technical debt, but sales wants new features. How do you decide?</p>',
          '<p>エンジニアリングは技術的負債の修正を望み、営業は新機能を望んでいる。どう決める?</p>', 2,
          'Balance technical and business needs', '技術とビジネスのニーズをバランス', 0],
-        ['Team Alignment', 'チーム調整', '/assets/cards/mission3.png',
+        ['Team Alignment', 'チーム調整', null,
          '<p>Design and engineering teams have different interpretations of requirements. How to align?</p>',
          '<p>デザインチームとエンジニアリングチームで要件の解釈が異なる。どう調整する?</p>', 3,
          'Align team understanding', 'チームの理解を調整', 0],
-        ['Budget Cut', '予算削減', '/assets/cards/mission4.png',
+        ['Budget Cut', '予算削減', null,
          '<p>Your project budget was cut by 30%. What gets prioritized?</p>',
          '<p>プロジェクト予算が30%削減された。何を優先する?</p>', 4,
          'Prioritize with constraints', '制約下での優先順位付け', 0],
-        ['Resignation & Forced Dual Role', '退職＆強制兼任', '/assets/cards/mission_special.png',
+        ['Resignation & Forced Dual Role', '退職＆強制兼任', null,
          '<p><strong>SPECIAL MISSION:</strong> You must resign immediately and assign your job to another player. That player now has dual responsibilities!</p>',
          '<p><strong>特別ミッション:</strong> あなたは即座に退職し、あなたの職種を別のプレイヤーに割り当てる必要があります。そのプレイヤーは二重の責任を負うことになります!</p>', 1,
          'Execute resignation and job transfer', '退職と職種移譲を実行', 1]

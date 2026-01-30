@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職種×スキル カードゲーム - マルチプレイヤー</title>
+    <title id="page-title">Career × Skills Card Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -797,120 +797,85 @@
         }
     </style>
 </head>
+    </style>
+</head>
 <body>
     <div id="app"></div>
 
     <script>
-        const translations = {
-            en: {
-                title: "Career × Skills Card Game",
-                createGame: "Create New Game",
-                joinGame: "Join Game",
-                playerName: "Your Name",
-                maxPlayers: "Max Players",
-                sessionId: "Session ID",
-                inviteUrl: "Invitation URL",
-                copyUrl: "Copy",
-                urlCopied: "Copied!",
-                waitingForPlayers: "Waiting for Players...",
-                playersInLobby: "Players in Lobby",
-                startGame: "Start Game",
-                rollDice: "Roll Dice",
-                nextTurn: "Next Turn",
-                endGame: "End Game",
-                resetGame: "Reset Game",
-                selectCard: "Select a Card",
-                currentTurn: "Current Turn",
-                points: "Points",
-                you: "YOU",
-                resigned: "Resigned",
-                winner: "Winner!",
-                congratulations: "Congratulations!",
-                matchBonus: "Match! +1 Point",
-                noMatch: "No Match",
-                discussMission: "Discuss this mission with your team",
-                selectPlayerForJob: "Select a player to assign this job",
-                youRetired: "You have retired!",
-                assignedJob: "has been assigned a new job",
-                close: "Close",
-                cancel: "Cancel",
-                connected: "Connected",
-                disconnected: "Disconnected",
-                or: "OR",
-                selectYourJob: "Select Your Job Card",
-                jobSelectedBadge: "✓ Selected",
-                waitingForOthers: "Waiting for others to select their jobs...",
-                allPlayersReady: "All players ready!",
-                selectedCardsHistory: "Selected Cards History",
-                turn: "Turn",
-                noCardsSelected: "No cards selected yet",
-                alreadySelected: "Already Selected (No Points)",
-                clickToFlip: "Click to flip",
-                doubleClickToSelect: "Double-click to select",
-                relatedSkills: "Related Skills for Your Job",
-                selected: "Selected",
-                notYetSelected: "Not Yet Selected"
-            },
-            ja: {
-                title: "職種 × スキル カードゲーム",
-                createGame: "新しいゲームを作成",
-                joinGame: "ゲームに参加",
-                playerName: "プレイヤー名",
-                maxPlayers: "最大プレイヤー数",
-                sessionId: "セッションID",
-                inviteUrl: "招待URL",
-                copyUrl: "コピー",
-                urlCopied: "コピーしました！",
-                waitingForPlayers: "プレイヤーを待っています...",
-                playersInLobby: "ロビーのプレイヤー",
-                startGame: "ゲーム開始",
-                rollDice: "サイコロを振る",
-                nextTurn: "次のターン",
-                endGame: "ゲーム終了",
-                resetGame: "リセット",
-                selectCard: "カードを選択",
-                currentTurn: "現在のターン",
-                points: "ポイント",
-                you: "あなた",
-                resigned: "退職済み",
-                winner: "勝者！",
-                congratulations: "おめでとうございます！",
-                matchBonus: "マッチ！ +1ポイント",
-                noMatch: "マッチなし",
-                discussMission: "チームでこのミッションについて話し合ってください",
-                selectPlayerForJob: "この職種を割り当てるプレイヤーを選択",
-                youRetired: "あなたは退職しました！",
-                assignedJob: "に新しい職種が割り当てられました",
-                close: "閉じる",
-                cancel: "キャンセル",
-                connected: "接続中",
-                disconnected: "切断",
-                or: "または",
-                selectYourJob: "職種カードを選択",
-                jobSelectedBadge: "✓ 選択済み",
-                waitingForOthers: "他のプレイヤーが職種を選択するのを待っています...",
-                allPlayersReady: "全員準備完了！",
-                selectedCardsHistory: "選択済みカード履歴",
-                turn: "ターン",
-                noCardsSelected: "まだカードが選択されていません",
-                alreadySelected: "選択済み（ポイント加算なし）",
-                clickToFlip: "クリックでめくる",
-                doubleClickToSelect: "ダブルクリックで選択",
-                relatedSkills: "自分の職種に関係するスキルカード",
-                selected: "選択済み",
-                notYetSelected: "未選択"
+        // ====== I18n System (API経由で翻訳ファイルを読み込む) ======
+        class I18n {
+            constructor() {
+                this.translations = {};
+                this.currentLang = localStorage.getItem('language') || 
+                                  (navigator.language.startsWith('ja') ? 'ja' : 'en');
             }
-        };
 
+            async init() {
+                await this.loadTranslations(this.currentLang);
+                this.watchLanguageChange();
+            }
+
+            async loadTranslations(lang) {
+                try {
+                    const response = await fetch(`/api/lang/${lang}`);
+                    const data = await response.json();
+                    if (data.ok) {
+                        this.translations = data.translations;
+                        this.currentLang = lang;
+                        localStorage.setItem('language', lang);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Failed to load translations:', error);
+                }
+                return false;
+            }
+
+            t(key) {
+                const keys = key.split('.');
+                let value = this.translations;
+                for (const k of keys) {
+                    value = value?.[k];
+                }
+                return value || key;
+            }
+
+            async setLanguage(lang) {
+                const success = await this.loadTranslations(lang);
+                if (success && window.game) {
+                    window.game.language = lang;
+                    window.game.render();
+                    document.getElementById('page-title').textContent = this.t('game.title');
+                }
+            }
+
+            watchLanguageChange() {
+                window.addEventListener('storage', async (e) => {
+                    if (e.key === 'language' && e.newValue !== this.currentLang) {
+                        await this.loadTranslations(e.newValue);
+                        if (window.game) {
+                            window.game.language = e.newValue;
+                            window.game.render();
+                            document.getElementById('page-title').textContent = this.t('game.title');
+                        }
+                    }
+                });
+            }
+        }
+
+        const i18n = new I18n();
+
+        // ====== GameClient Class ======
         class GameClient {
             constructor() {
                 this.ws = null;
-                this.language = navigator.language.startsWith('ja') ? 'ja' : 'en';
+                this.language = i18n.currentLang;
                 this.sessionId = null;
                 this.playerId = null;
                 this.session = null;
                 this.connected = false;
-                this.mode = 'menu'; // menu, lobby, game
+                this.mode = 'menu';
                 this.selectedCard = null;
                 this.rolling = false;
                 this.modal = null;
@@ -920,9 +885,14 @@
                 this.flippedJobCards = new Set();
 
                 this.checkUrlParams();
+            }
+
+            async init() {
+                await i18n.init();
                 this.connect();
                 this.fetchJobCards();
                 this.fetchSkillCards();
+                this.render();
             }
 
             checkUrlParams() {
@@ -938,7 +908,7 @@
                 fetch('/api/cards/jobs')
                     .then(r => r.json())
                     .then(data => {
-                        this.jobCardsCache = data;
+                        this.jobCardsCache = data.ok ? data.data : data;
                     })
                     .catch(console.error);
             }
@@ -947,7 +917,7 @@
                 fetch('/api/cards/skills')
                     .then(r => r.json())
                     .then(data => {
-                        this.skillCardsCache = data;
+                        this.skillCardsCache = data.ok ? data.data : data;
                     })
                     .catch(console.error);
             }
@@ -1026,19 +996,19 @@
                         if (data.card.type === 'skill') {
                             if (data.alreadySelected) {
                                 this.showModal({
-                                    title: this.t('alreadySelected'),
-                                    content: data.card[`descriptionHtml_${this.language}`] + '<br><br><em>' + this.t('alreadySelected') + '</em>'
+                                    title: i18n.t('game.alreadySelected'),
+                                    content: data.card[`descriptionHtml_${this.language}`] + '<br><br><em>' + i18n.t('game.alreadySelected') + '</em>'
                                 });
                             } else {
                                 this.showModal({
-                                    title: data.matched ? this.t('matchBonus') : this.t('noMatch'),
+                                    title: data.matched ? i18n.t('game.matchBonus') : i18n.t('game.noMatch'),
                                     content: data.card[`descriptionHtml_${this.language}`]
                                 });
                             }
                         } else if (data.card.type === 'mission') {
                             this.showModal({
                                 title: data.card[`name_${this.language}`] || 'Mission',
-                                content: data.card[`descriptionHtml_${this.language}`] + '<br><br><em>' + this.t('discussMission') + '</em>'
+                                content: data.card[`descriptionHtml_${this.language}`] + '<br><br><em>' + i18n.t('game.discussMission') + '</em>'
                             });
                         } else if (data.card.type === 'special') {
                             this.showPlayerSelectionModal(data.card);
@@ -1052,7 +1022,6 @@
                         break;
 
                     case 'cardSelectedByOther':
-                        // 他のプレイヤーがスキルカードを選択した場合、状態更新のみ
                         this.session = data.session;
                         this.render();
                         break;
@@ -1068,8 +1037,8 @@
                     case 'playerRetired':
                         this.session = data.session;
                         this.showModal({
-                            title: this.t('youRetired'),
-                            content: `Player ${data.targetPlayerId} ${this.t('assignedJob')}`
+                            title: i18n.t('game.youRetired'),
+                            content: `Player ${data.targetPlayerId} ${i18n.t('game.assignedJob')}`
                         });
                         this.render();
                         break;
@@ -1085,7 +1054,8 @@
                         break;
 
                     case 'error':
-                        alert(data.message);
+                        const errorMsg = data.error?.message || i18n.t('errors.SERVER_ERROR');
+                        alert(errorMsg);
                         break;
                 }
             }
@@ -1097,7 +1067,7 @@
             }
 
             t(key) {
-                return translations[this.language][key] || key;
+                return i18n.t(key);
             }
 
             createSession() {
@@ -1105,7 +1075,7 @@
                 const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
                 
                 if (!playerName) {
-                    alert('Please enter your name');
+                    alert(this.t('errors.INVALID_INPUT'));
                     return;
                 }
 
@@ -1121,7 +1091,7 @@
                 const sessionId = document.getElementById('joinSessionId').value.trim();
                 
                 if (!playerName || !sessionId) {
-                    alert('Please enter your name and session ID');
+                    alert(this.t('errors.INVALID_INPUT'));
                     return;
                 }
 
@@ -1158,10 +1128,10 @@
             }
 
             rollDice() {
-                if (this.rolling) return; // 既に振っている場合は無視
+                if (this.rolling) return;
                 
                 this.rolling = true;
-                this.selectedCard = null; // 念のためリセット
+                this.selectedCard = null;
                 this.render();
                 
                 this.send({
@@ -1169,7 +1139,6 @@
                     sessionId: this.sessionId
                 });
                 
-                // フェイルセーフ: 5秒後に強制的にrollingをfalseに
                 setTimeout(() => {
                     if (this.rolling) {
                         console.warn('Dice rolling timeout - force stopping');
@@ -1200,7 +1169,7 @@
             }
 
             nextTurn() {
-                this.rolling = false; // 念のためリセット
+                this.rolling = false;
                 this.send({
                     type: 'nextTurn',
                     sessionId: this.sessionId
@@ -1208,7 +1177,7 @@
             }
 
             resetGame() {
-                if (confirm('Reset the game?')) {
+                if (confirm(this.t('game.resetGame') + '?')) {
                     this.send({
                         type: 'resetGame',
                         sessionId: this.sessionId
@@ -1236,7 +1205,7 @@
                     !p.retired && p.id !== this.playerId
                 );
                 this.modal = {
-                    title: this.t('selectPlayerForJob'),
+                    title: this.t('game.selectPlayerForJob'),
                     playerSelection: true,
                     players: otherPlayers,
                     card
@@ -1246,7 +1215,7 @@
 
             showWinnerModal(winner) {
                 this.modal = {
-                    title: this.t('winner'),
+                    title: this.t('game.winner'),
                     winner: true,
                     winnerData: winner
                 };
@@ -1264,9 +1233,9 @@
                     const btn = document.querySelector('.copy-btn');
                     if (btn) {
                         const originalText = btn.textContent;
-                        btn.textContent = this.t('urlCopied');
+                        btn.textContent = this.t('game.urlCopied');
                         setTimeout(() => {
-                            btn.textContent = originalText;
+                            btn.textContent = this.t('game.copyUrl');
                         }, 2000);
                     }
                 });
@@ -1295,7 +1264,7 @@
                 let html = `
                     <div class="connection-status connected">
                         <span class="status-dot"></span>
-                        ${this.t('connected')}
+                        ${this.t('common.connected')}
                     </div>
                 `;
 
@@ -1321,10 +1290,10 @@
                         <div class="background-pattern"></div>
                         <div class="connection-status disconnected">
                             <span class="status-dot"></span>
-                            ${this.t('disconnected')}
+                            ${this.t('common.disconnected')}
                         </div>
                         <div class="game-setup">
-                            <h2>Connecting to server...</h2>
+                            <h2>${this.t('common.loading')}</h2>
                         </div>
                     </div>
                 `;
@@ -1337,52 +1306,52 @@
                     <div class="app-container">
                         <div class="background-pattern"></div>
                         <div class="header">
-                            <h1>${this.t('title')}</h1>
+                            <h1>${this.t('game.title')}</h1>
                             <div class="lang-toggle">
-                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">English</button>
-                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">日本語</button>
+                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">${this.t('common.english')}</button>
+                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">${this.t('common.japanese')}</button>
                             </div>
                         </div>
                         <div class="game-setup">
                             ${isJoinDirect ? `
-                                <h2>${this.t('joinGame')}</h2>
+                                <h2>${this.t('game.joinGame')}</h2>
                                 <div class="form-group">
-                                    <label>${this.t('sessionId')}</label>
+                                    <label>${this.t('game.sessionId')}</label>
                                     <input type="text" id="joinSessionId" value="${this.sessionId}" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>${this.t('playerName')}</label>
-                                    <input type="text" id="joinPlayerName" placeholder="${this.t('playerName')}">
+                                    <label>${this.t('game.playerName')}</label>
+                                    <input type="text" id="joinPlayerName" placeholder="${this.t('game.playerName')}">
                                 </div>
-                                <button class="btn" onclick="game.joinSession()">${this.t('joinGame')}</button>
+                                <button class="btn" onclick="game.joinSession()">${this.t('game.joinGame')}</button>
                             ` : `
-                                <h2>${this.t('createGame')}</h2>
+                                <h2>${this.t('game.createGame')}</h2>
                                 <div class="form-group">
-                                    <label>${this.t('playerName')}</label>
-                                    <input type="text" id="playerName" placeholder="${this.t('playerName')}">
+                                    <label>${this.t('game.playerName')}</label>
+                                    <input type="text" id="playerName" placeholder="${this.t('game.playerName')}">
                                 </div>
                                 <div class="form-group">
-                                    <label>${this.t('maxPlayers')}</label>
+                                    <label>${this.t('game.maxPlayers')}</label>
                                     <select id="maxPlayers">
                                         <option value="2">2</option>
                                         <option value="3">3</option>
                                         <option value="4" selected>4</option>
                                     </select>
                                 </div>
-                                <button class="btn" onclick="game.createSession()">${this.t('createGame')}</button>
+                                <button class="btn" onclick="game.createSession()">${this.t('game.createGame')}</button>
                                 
-                                <div class="or-divider"><span>${this.t('or')}</span></div>
+                                <div class="or-divider"><span>${this.t('common.or')}</span></div>
                                 
-                                <h2>${this.t('joinGame')}</h2>
+                                <h2>${this.t('game.joinGame')}</h2>
                                 <div class="form-group">
-                                    <label>${this.t('playerName')}</label>
-                                    <input type="text" id="joinPlayerName" placeholder="${this.t('playerName')}">
+                                    <label>${this.t('game.playerName')}</label>
+                                    <input type="text" id="joinPlayerName" placeholder="${this.t('game.playerName')}">
                                 </div>
                                 <div class="form-group">
-                                    <label>${this.t('sessionId')}</label>
-                                    <input type="text" id="joinSessionId" placeholder="${this.t('sessionId')}">
+                                    <label>${this.t('game.sessionId')}</label>
+                                    <input type="text" id="joinSessionId" placeholder="${this.t('game.sessionId')}">
                                 </div>
-                                <button class="btn" onclick="game.joinSession()">${this.t('joinGame')}</button>
+                                <button class="btn" onclick="game.joinSession()">${this.t('game.joinGame')}</button>
                             `}
                         </div>
                     </div>
@@ -1397,36 +1366,36 @@
                     <div class="app-container">
                         <div class="background-pattern"></div>
                         <div class="header">
-                            <h1>${this.t('title')}</h1>
+                            <h1>${this.t('game.title')}</h1>
                             <div class="lang-toggle">
-                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">English</button>
-                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">日本語</button>
+                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">${this.t('common.english')}</button>
+                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">${this.t('common.japanese')}</button>
                             </div>
                         </div>
                         <div class="waiting-room">
                             <div class="waiting-header">
-                                <h2>${this.t('waitingForPlayers')}</h2>
+                                <h2>${this.t('game.waitingForPlayers')}</h2>
                                 <div class="session-id-display">${this.sessionId}</div>
-                                <p>${this.session.players.length} / ${this.session.maxPlayers} ${this.t('playersInLobby')}</p>
+                                <p>${this.session.players.length} / ${this.session.maxPlayers} ${this.t('game.playersInLobby')}</p>
                             </div>
                             
                             <div class="invite-url-box">
-                                <label>${this.t('inviteUrl')}</label>
+                                <label>${this.t('game.inviteUrl')}</label>
                                 <div class="invite-url-content">
                                     <input type="text" value="${inviteUrl}" readonly>
-                                    <button class="copy-btn" onclick="game.copyInviteUrl()">${this.t('copyUrl')}</button>
+                                    <button class="copy-btn" onclick="game.copyInviteUrl()">${this.t('game.copyUrl')}</button>
                                 </div>
                             </div>
                             
                             <div class="player-list">
-                                <h3>${this.t('playersInLobby')}</h3>
+                                <h3>${this.t('game.playersInLobby')}</h3>
                                 ${this.session.players.map(player => `
                                     <div class="player-item">
                                         <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
                                         <div class="player-name">
                                             ${player.name}
-                                            ${player.id === this.playerId ? `<span class="you-badge">${this.t('you')}</span>` : ''}
-                                            ${player.jobSelected ? `<span class="you-badge" style="background: var(--success); margin-left: 5px;">${this.t('jobSelectedBadge')}</span>` : ''}
+                                            ${player.id === this.playerId ? `<span class="you-badge">${this.t('common.you')}</span>` : ''}
+                                            ${player.jobSelected ? `<span class="you-badge" style="background: var(--success); margin-left: 5px;">${this.t('game.jobSelectedBadge')}</span>` : ''}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -1434,21 +1403,21 @@
                             
                             ${!this.session.players.find(p => p.id === this.playerId).jobSelected ? `
                                 <div class="player-list" style="margin-top: 20px;">
-                                    <h3>${this.t('selectYourJob')}</h3>
+                                    <h3>${this.t('game.selectYourJob')}</h3>
                                     <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; margin-bottom: 15px;">
-                                        ${this.language === 'ja' ? 'カード中央をクリックで選択 | 下部をクリックで詳細表示' : 'Click center to select | Click bottom for details'}
+                                        ${this.t('game.cardSelectHint')}
                                     </p>
                                     <div class="cards-grid" id="jobSelection" style="margin-top: 15px;"></div>
                                 </div>
                             ` : `
                                 <div style="text-align: center; margin: 20px 0; padding: 20px; background: var(--bg-dark); border-radius: 12px;">
-                                    <p style="color: var(--success); font-weight: 600;">${this.t('waitingForOthers')}</p>
+                                    <p style="color: var(--success); font-weight: 600;">${this.t('game.waitingForOthers')}</p>
                                 </div>
                             `}
                             
                             ${isHost ? `
                                 <button class="btn" onclick="game.startGame()" ${this.session.players.length < 2 || !this.session.players.every(p => p.jobSelected) ? 'disabled' : ''}>
-                                    ${this.session.players.every(p => p.jobSelected) ? this.t('allPlayersReady') + ' - ' : ''}${this.t('startGame')}
+                                    ${this.session.players.every(p => p.jobSelected) ? this.t('game.allPlayersReady') + ' - ' : ''}${this.t('game.startGame')}
                                 </button>
                             ` : ''}
                         </div>
@@ -1465,15 +1434,15 @@
                     <div class="app-container">
                         <div class="background-pattern"></div>
                         <div class="header">
-                            <h1>${this.t('title')}</h1>
+                            <h1>${this.t('game.title')}</h1>
                             <div class="lang-toggle">
-                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">English</button>
-                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">日本語</button>
+                                <button class="${this.language === 'en' ? 'active' : ''}" data-lang="en">${this.t('common.english')}</button>
+                                <button class="${this.language === 'ja' ? 'active' : ''}" data-lang="ja">${this.t('common.japanese')}</button>
                             </div>
                         </div>
                         <div class="game-board">
                             <div class="turn-indicator">
-                                ${this.t('currentTurn')}: ${currentPlayer.name}
+                                ${this.t('game.currentTurn')}: ${currentPlayer.name}
                             </div>
                             
                             <div class="players-area">
@@ -1487,12 +1456,12 @@
                                             <div class="player-header">
                                                 <div class="player-name-tag">
                                                     ${player.name}
-                                                    ${isYou ? `<span class="you-badge">${this.t('you')}</span>` : ''}
+                                                    ${isYou ? `<span class="you-badge">${this.t('common.you')}</span>` : ''}
                                                 </div>
-                                                ${!player.retired ? `<div class="player-points">${totalPoints} ${this.t('points')}</div>` : ''}
+                                                ${!player.retired ? `<div class="player-points">${totalPoints} ${this.t('common.points')}</div>` : ''}
                                             </div>
                                             ${player.retired ? `
-                                                <div class="retired-badge">${this.t('resigned')}</div>
+                                                <div class="retired-badge">${this.t('game.resigned')}</div>
                                             ` : `
                                                 <div class="player-jobs">
                                                     ${player.jobs.map(jobId => `
@@ -1515,30 +1484,29 @@
                                     </div>
                                     <button class="btn btn-small" onclick="game.rollDice()" 
                                         ${!isMyTurn || this.rolling || this.session.drawnCards.length > 0 || myPlayer.retired ? 'disabled' : ''}>
-                                        ${this.t('rollDice')}
+                                        ${this.t('game.rollDice')}
                                     </button>
                                 </div>
                                 <button class="btn btn-small" onclick="game.nextTurn()" 
                                     ${!this.selectedCard ? 'disabled' : ''}>
-                                    ${this.t('nextTurn')}
+                                    ${this.t('game.nextTurn')}
                                 </button>
                                 <button class="btn btn-small btn-secondary" onclick="game.resetGame()">
-                                    ${this.t('resetGame')}
+                                    ${this.t('game.resetGame')}
                                 </button>
                             </div>
                             
                             ${this.session.drawnCards.length > 0 ? `
                                 <div class="cards-area">
-                                    <h3 class="cards-title">${this.t('selectCard')}</h3>
+                                    <h3 class="cards-title">${this.t('game.selectCard')}</h3>
                                     <p style="text-align: center; color: var(--text-secondary); margin-bottom: 15px;">
-                                        ${this.language === 'ja' ? 'カード中央をクリックで選択 | 下部をクリックで詳細表示' : 'Click center to select | Click bottom for details'}
+                                        ${this.t('game.cardSelectHint')}
                                     </p>
                                     <div class="cards-grid">
                                         ${this.session.drawnCards.map((card, index) => {
                                             const isFlipped = this.flippedCards.has(card.id);
                                             const isDisabled = this.selectedCard && this.selectedCard.id !== card.id;
                                             
-                                            // カードタイプによって背景色を設定
                                             let bgStyle = '';
                                             if (card.type === 'skill') {
                                                 bgStyle = 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);';
@@ -1563,7 +1531,7 @@
                                                     `}
                                                 </div>
                                                 <div class="simple-card-footer" onclick="event.stopPropagation(); game.flipCard(${card.id})">
-                                                    ${isFlipped ? '← ' + (this.language === 'ja' ? '表に戻る' : 'Back') : (this.language === 'ja' ? '詳細を見る' : 'View Details') + ' →'}
+                                                    ${isFlipped ? '← ' + this.t('game.backToFront') : this.t('game.viewDetails') + ' →'}
                                                 </div>
                                             </div>
                                             `;
@@ -1574,12 +1542,12 @@
                             
                             ${this.session.selectedCardsHistory && this.session.selectedCardsHistory.length > 0 ? `
                                 <div class="cards-area">
-                                    <h3 class="cards-title">${this.t('selectedCardsHistory')}</h3>
+                                    <h3 class="cards-title">${this.t('game.selectedCardsHistory')}</h3>
                                     <div style="display: flex; flex-direction: column; gap: 10px;">
                                         ${this.session.selectedCardsHistory.slice().reverse().map((entry, index) => `
                                             <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-dark); border-radius: 12px; border: 2px solid var(--border);">
                                                 <div style="min-width: 80px; font-weight: 700; color: var(--text-secondary);">
-                                                    ${this.t('turn')} ${entry.turnNumber}
+                                                    ${this.t('game.turn')} ${entry.turnNumber}
                                                 </div>
                                                 <div style="flex: 1;">
                                                     <strong>${entry.playerName}</strong>
@@ -1596,7 +1564,7 @@
                             
                             ${myPlayer.jobs.length > 0 && this.skillCardsCache.length > 0 ? `
                                 <div class="cards-area">
-                                    <h3 class="cards-title">${this.t('relatedSkills')}</h3>
+                                    <h3 class="cards-title">${this.t('game.relatedSkills')}</h3>
                                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                                         ${this.skillCardsCache
                                             .filter(skill => {
@@ -1617,7 +1585,7 @@
                                                     gap: 8px;
                                                 ">
                                                     ${isSelected ? '✓' : '○'} ${skill[`name_${this.language}`] || skill.name_en}
-                                                    <span style="font-size: 0.75rem; opacity: 0.8;">(${isSelected ? this.t('selected') : this.t('notYetSelected')})</span>
+                                                    <span style="font-size: 0.75rem; opacity: 0.8;">(${isSelected ? this.t('game.selected') : this.t('game.notYetSelected')})</span>
                                                 </div>
                                                 `;
                                             }).join('')}
@@ -1637,10 +1605,10 @@
                         <div class="modal-overlay">
                             <div class="modal">
                                 <div class="winner-animation">
-                                    <h2>🎉 ${this.t('winner')} 🎉</h2>
+                                    <h2>🎉 ${this.t('game.winner')} 🎉</h2>
                                     <h3>${this.modal.winnerData.name}</h3>
                                     <p style="font-size: 1.2rem; margin-top: 20px;">
-                                        ${this.t('congratulations')}
+                                        ${this.t('game.congratulations')}
                                     </p>
                                 </div>
                             </div>
@@ -1661,7 +1629,7 @@
                                     `).join('')}
                                 </div>
                                 <button class="btn btn-secondary" onclick="game.closeModal()">
-                                    ${this.t('cancel')}
+                                    ${this.t('common.cancel')}
                                 </button>
                             </div>
                         </div>
@@ -1676,7 +1644,7 @@
                                 ${this.modal.content || ''}
                             </div>
                             <button class="btn" onclick="game.closeModal()">
-                                ${this.t('close')}
+                                ${this.t('common.close')}
                             </button>
                         </div>
                     </div>
@@ -1686,15 +1654,13 @@
             attachEventListeners() {
                 document.querySelectorAll('[data-lang]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        this.language = btn.dataset.lang;
-                        this.render();
+                        i18n.setLanguage(btn.dataset.lang);
                     });
                 });
                 
                 // Load job cards for selection
                 const jobSelectionContainer = document.getElementById('jobSelection');
                 if (jobSelectionContainer && this.jobCardsCache.length > 0) {
-                    // Get already selected job IDs from other players
                     const selectedJobIds = new Set();
                     if (this.session && this.session.players) {
                         this.session.players.forEach(player => {
@@ -1720,23 +1686,22 @@
                                         <div>${job[`descriptionHtml_${this.language}`] || ''}</div>
                                     </div>
                                 ` : `
-                                    ${job[`name_${this.language}`]}${isSelected ? '<br><small style="color: var(--text-secondary);">' + (this.language === 'ja' ? '選択済み' : 'Already Selected') + '</small>' : ''}
+                                    ${job[`name_${this.language}`]}${isSelected ? '<br><small style="color: var(--text-secondary);">' + this.t('game.alreadySelectedByOther') + '</small>' : ''}
                                 `}
                             </div>
                             <div class="simple-card-footer" onclick="event.stopPropagation(); ${isSelected ? '' : `game.flipJobCard(${job.id})`}">
-                                ${isFlipped ? '← ' + (this.language === 'ja' ? '表に戻る' : 'Back') : (this.language === 'ja' ? '詳細を見る' : 'View Details') + ' →'}
+                                ${isFlipped ? '← ' + this.t('game.backToFront') : this.t('game.viewDetails') + ' →'}
                             </div>
                         </div>
                         `;
                     }).join('');
                 } else if (jobSelectionContainer) {
-                    // Fetch job cards if not cached
                     fetch('/api/cards/jobs')
                         .then(r => r.json())
-                        .then(jobs => {
+                        .then(data => {
+                            const jobs = data.ok ? data.data : data;
                             this.jobCardsCache = jobs;
                             
-                            // Get already selected job IDs from other players
                             const selectedJobIds = new Set();
                             if (this.session && this.session.players) {
                                 this.session.players.forEach(player => {
@@ -1762,11 +1727,11 @@
                                                 <div>${job[`descriptionHtml_${this.language}`] || ''}</div>
                                             </div>
                                         ` : `
-                                            ${job[`name_${this.language}`]}${isSelected ? '<br><small style="color: var(--text-secondary);">' + (this.language === 'ja' ? '選択済み' : 'Already Selected') + '</small>' : ''}
+                                            ${job[`name_${this.language}`]}${isSelected ? '<br><small style="color: var(--text-secondary);">' + this.t('game.alreadySelectedByOther') + '</small>' : ''}
                                         `}
                                     </div>
                                     <div class="simple-card-footer" onclick="event.stopPropagation(); ${isSelected ? '' : `game.flipJobCard(${job.id})`}">
-                                        ${isFlipped ? '← ' + (this.language === 'ja' ? '表に戻る' : 'Back') : (this.language === 'ja' ? '詳細を見る' : 'View Details') + ' →'}
+                                        ${isFlipped ? '← ' + this.t('game.backToFront') : this.t('game.viewDetails') + ' →'}
                                     </div>
                                 </div>
                                 `;
@@ -1778,7 +1743,8 @@
 
         // Initialize game
         const game = new GameClient();
-        game.render();
+        window.game = game;
+        game.init();
     </script>
 </body>
 </html>
