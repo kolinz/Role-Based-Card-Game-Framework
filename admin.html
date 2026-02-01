@@ -327,6 +327,86 @@
             font-weight: 800;
             color: var(--primary);
         }
+    
+        /* CSV Import Modal */
+        .csv-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .csv-modal-overlay.show {
+            display: flex;
+        }
+
+        .csv-modal {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid var(--border);
+        }
+
+        .csv-preview-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .csv-preview-table th,
+        .csv-preview-table td {
+            padding: 10px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .csv-preview-table th {
+            background: var(--bg-dark);
+            font-weight: 600;
+        }
+
+        .csv-error-list {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .csv-error-item {
+            color: var(--danger);
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .csv-success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .csv-success-box h3 {
+            color: var(--success);
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -377,17 +457,29 @@
             </div>
 
             <div id="jobs-tab" class="tab-content active">
-                <button class="btn btn-success" onclick="openAddModal('job')" style="margin-bottom: 20px;" id="add-job-btn">+ Add New Job Card</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="openAddModal('job')" id="add-job-btn">+ Add New Job Card</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);" onclick="exportCSV('jobs')" id="export-jobs-btn">📤 Export CSV</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);" onclick="openImportModal('jobs')" id="import-jobs-btn">📥 Import CSV</button>
+                </div>
                 <div id="jobs-list" class="card-list"></div>
             </div>
 
             <div id="skills-tab" class="tab-content">
-                <button class="btn btn-success" onclick="openAddModal('skill')" style="margin-bottom: 20px;" id="add-skill-btn">+ Add New Skill Card</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="openAddModal('skill')" id="add-skill-btn">+ Add New Skill Card</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);" onclick="exportCSV('skills')" id="export-skills-btn">📤 Export CSV</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);" onclick="openImportModal('skills')" id="import-skills-btn">📥 Import CSV</button>
+                </div>
                 <div id="skills-list" class="card-list"></div>
             </div>
 
             <div id="missions-tab" class="tab-content">
-                <button class="btn btn-success" onclick="openAddModal('mission')" style="margin-bottom: 20px;" id="add-mission-btn">+ Add New Mission Card</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="openAddModal('mission')" id="add-mission-btn">+ Add New Mission Card</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);" onclick="exportCSV('missions')" id="export-missions-btn">📤 Export CSV</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);" onclick="openImportModal('missions')" id="import-missions-btn">📥 Import CSV</button>
+                </div>
                 <div id="missions-list" class="card-list"></div>
             </div>
 
@@ -516,6 +608,25 @@
                 
                 const cancelBtn = document.getElementById('cancel-btn');
                 if (cancelBtn) cancelBtn.textContent = this.t('common.cancel');
+
+                // Update CSV buttons
+                const exportJobsBtn = document.getElementById('export-jobs-btn');
+                if (exportJobsBtn) exportJobsBtn.textContent = this.t('admin.exportCSV');
+                
+                const exportSkillsBtn = document.getElementById('export-skills-btn');
+                if (exportSkillsBtn) exportSkillsBtn.textContent = this.t('admin.exportCSV');
+                
+                const exportMissionsBtn = document.getElementById('export-missions-btn');
+                if (exportMissionsBtn) exportMissionsBtn.textContent = this.t('admin.exportCSV');
+                
+                const importJobsBtn = document.getElementById('import-jobs-btn');
+                if (importJobsBtn) importJobsBtn.textContent = this.t('admin.importCSV');
+                
+                const importSkillsBtn = document.getElementById('import-skills-btn');
+                if (importSkillsBtn) importSkillsBtn.textContent = this.t('admin.importCSV');
+                
+                const importMissionsBtn = document.getElementById('import-missions-btn');
+                if (importMissionsBtn) importMissionsBtn.textContent = this.t('admin.importCSV');
 
                 // Update language toggle buttons
                 document.querySelectorAll('[data-lang]').forEach(btn => {
@@ -1035,6 +1146,297 @@
                 alert(i18n.t('errors.SERVER_ERROR'));
             }
         }
-    </script>
+    
+        // ============================================
+        // CSV Export/Import Functions
+        // ============================================
+        
+        let currentCsvType = null;
+        let currentCsvData = null;
+
+        // Convert data to CSV format
+        function convertToCSV(data, headers) {
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            };
+
+            const rows = [headers.join(',')];
+            data.forEach(item => {
+                const row = headers.map(header => escapeCSV(item[header]));
+                rows.push(row.join(','));
+            });
+
+            return rows.join('\n');
+        }
+
+        // Export CSV
+        async function exportCSV(type) {
+            try {
+                let endpoint = '';
+                let headers = [];
+                let filename = '';
+
+                if (type === 'jobs') {
+                    endpoint = '/api/cards/jobs';
+                    headers = ['id', 'name_en', 'name_ja', 'descriptionHtml_en', 'descriptionHtml_ja', 'targetPoints'];
+                    filename = 'job_cards.csv';
+                } else if (type === 'skills') {
+                    endpoint = '/api/cards/skills';
+                    headers = ['id', 'name_en', 'name_ja', 'descriptionHtml_en', 'descriptionHtml_ja', 'matchesJobs'];
+                    filename = 'skill_cards.csv';
+                } else if (type === 'missions') {
+                    endpoint = '/api/cards/missions';
+                    headers = ['id', 'name_en', 'name_ja', 'descriptionHtml_en', 'descriptionHtml_ja', 'categoryId', 'target_en', 'target_ja', 'isSpecial'];
+                    filename = 'mission_cards.csv';
+                }
+
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                const csv = convertToCSV(data, headers);
+                const bom = '\uFEFF'; // UTF-8 BOM for Excel
+                const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+            } catch (error) {
+                console.error('Export error:', error);
+                alert(i18n.t('admin.error'));
+            }
+        }
+
+        // Open import modal
+        function openImportModal(type) {
+            currentCsvType = type;
+            currentCsvData = null;
+            
+            document.getElementById('csvImportModal').classList.add('show');
+            document.getElementById('csvFileInput').value = '';
+            document.getElementById('csvPreviewContainer').style.display = 'none';
+            document.getElementById('csvResultsContainer').style.display = 'none';
+            
+            updateCsvModalLanguage();
+        }
+
+        // Close import modal
+        function closeCsvImportModal() {
+            document.getElementById('csvImportModal').classList.remove('show');
+            currentCsvType = null;
+            currentCsvData = null;
+        }
+
+        // Handle file selection
+        function handleCsvFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                currentCsvData = e.target.result;
+                await previewCsv();
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // Preview CSV data
+        async function previewCsv() {
+            if (!currentCsvData || !currentCsvType) {
+                alert(i18n.t('admin.noFileSelected'));
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('admin_token');
+                const endpoint = `/api/admin/import/${currentCsvType}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        csvData: currentCsvData,
+                        preview: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Validation errors
+                    if (result.errors && result.errors.length > 0) {
+                        const errorsHtml = `
+                            <div class="csv-error-list">
+                                <h4>${i18n.t('admin.validationErrors')}</h4>
+                                ${result.errors.map(err => `<div class="csv-error-item">${err}</div>`).join('')}
+                            </div>
+                        `;
+                        document.getElementById('csvErrors').innerHTML = errorsHtml;
+                        document.getElementById('csvPreviewContainer').style.display = 'block';
+                        document.getElementById('csv-import-btn').disabled = true;
+                        return;
+                    }
+                    throw new Error(result.error || 'Import failed');
+                }
+
+                // Show preview
+                const preview = result.preview || [];
+                const totalRecords = result.totalRows || 0;
+
+                const previewHtml = `
+                    <table class="csv-preview-table">
+                        <thead>
+                            <tr>${Object.keys(preview[0] || {}).map(key => `<th>${key}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${preview.map(row => `
+                                <tr>${Object.values(row).map(val => `<td>${val || ''}</td>`).join('')}</tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('csv-total-records').textContent = `${i18n.t('admin.totalRecords')}: ${totalRecords}`;
+                document.getElementById('csvPreview').innerHTML = previewHtml;
+                document.getElementById('csvErrors').innerHTML = '';
+                document.getElementById('csvPreviewContainer').style.display = 'block';
+                document.getElementById('csv-import-btn').disabled = false;
+
+            } catch (error) {
+                console.error('Preview error:', error);
+                alert(i18n.t('admin.csvParseError') + ': ' + error.message);
+            }
+        }
+
+        // Execute CSV import
+        async function executeCsvImport() {
+            if (!currentCsvData || !currentCsvType) return;
+
+            if (!confirm(i18n.t('admin.import') + '?')) return;
+
+            try {
+                document.getElementById('csv-import-btn').disabled = true;
+                document.getElementById('csv-import-btn').textContent = i18n.t('admin.importing');
+
+                const token = localStorage.getItem('admin_token');
+                const endpoint = `/api/admin/import/${currentCsvType}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        csvData: currentCsvData,
+                        preview: false
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Import failed');
+                }
+
+                // Show results
+                const resultsHtml = `
+                    <div class="csv-success-box">
+                        <h3>${i18n.t('admin.importSuccess')}</h3>
+                        <p>${i18n.t('admin.inserted')}: ${result.inserted || 0} ${i18n.t('admin.records')}</p>
+                        <p>${i18n.t('admin.updated')}: ${result.updated || 0} ${i18n.t('admin.records')}</p>
+                        <p>${i18n.t('admin.totalRecords')}: ${result.total || 0}</p>
+                    </div>
+                `;
+
+                document.getElementById('csvResultsContainer').innerHTML = resultsHtml;
+                document.getElementById('csvResultsContainer').style.display = 'block';
+                document.getElementById('csvPreviewContainer').style.display = 'none';
+
+                // Reload data
+                await loadData();
+
+                setTimeout(() => {
+                    closeCsvImportModal();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Import error:', error);
+                alert(i18n.t('admin.error') + ': ' + error.message);
+                document.getElementById('csv-import-btn').disabled = false;
+                document.getElementById('csv-import-btn').textContent = i18n.t('admin.import');
+            }
+        }
+
+        // Update CSV modal language
+        function updateCsvModalLanguage() {
+            const titleMap = {
+                'jobs': i18n.t('admin.jobCards'),
+                'skills': i18n.t('admin.skillCards'),
+                'missions': i18n.t('admin.missionCards')
+            };
+            
+            document.getElementById('csv-import-title').textContent = 
+                i18n.t('admin.csvImportTitle') + ' - ' + (titleMap[currentCsvType] || '');
+            document.getElementById('csv-select-file-label').textContent = i18n.t('admin.selectCsvFile');
+            document.getElementById('csv-preview-title').textContent = i18n.t('admin.previewData');
+            
+            const importBtn = document.getElementById('csv-import-btn');
+            if (importBtn && !importBtn.disabled) {
+                importBtn.textContent = i18n.t('admin.import');
+            }
+            
+            const exportJobsBtn = document.getElementById('export-jobs-btn');
+            const exportSkillsBtn = document.getElementById('export-skills-btn');
+            const exportMissionsBtn = document.getElementById('export-missions-btn');
+            const importJobsBtn = document.getElementById('import-jobs-btn');
+            const importSkillsBtn = document.getElementById('import-skills-btn');
+            const importMissionsBtn = document.getElementById('import-missions-btn');
+            
+            if (exportJobsBtn) exportJobsBtn.textContent = i18n.t('admin.exportCSV');
+            if (exportSkillsBtn) exportSkillsBtn.textContent = i18n.t('admin.exportCSV');
+            if (exportMissionsBtn) exportMissionsBtn.textContent = i18n.t('admin.exportCSV');
+            if (importJobsBtn) importJobsBtn.textContent = i18n.t('admin.importCSV');
+            if (importSkillsBtn) importSkillsBtn.textContent = i18n.t('admin.importCSV');
+            if (importMissionsBtn) importMissionsBtn.textContent = i18n.t('admin.importCSV');
+        }
+
+
+</script>
+
+    <!-- CSV Import Modal -->
+    <div id="csvImportModal" class="csv-modal-overlay">
+        <div class="csv-modal">
+            <div class="modal-header">
+                <h2 id="csv-import-title">Import CSV File</h2>
+                <button class="close-btn" onclick="closeCsvImportModal()">×</button>
+            </div>
+            <div id="csvImportContent">
+                <div class="form-group">
+                    <label id="csv-select-file-label">Select CSV File</label>
+                    <input type="file" id="csvFileInput" accept=".csv" onchange="handleCsvFileSelect(event)">
+                </div>
+                <div id="csvPreviewContainer" style="display: none;">
+                    <h3 id="csv-preview-title">Preview Data</h3>
+                    <p id="csv-total-records"></p>
+                    <div id="csvPreview"></div>
+                    <div id="csvErrors"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-success" onclick="executeCsvImport()" id="csv-import-btn" style="flex: 1;">Import</button>
+                        <button class="btn" onclick="closeCsvImportModal()" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+                <div id="csvResultsContainer" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

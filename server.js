@@ -8,6 +8,59 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 
+// Simple CSV parser (replacing papaparse)
+function parseCSV(csvText) {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length === 0) return { data: [], errors: [] };
+    
+    const headers = parseCSVLine(lines[0]);
+    const data = [];
+    const errors = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        try {
+            const values = parseCSVLine(lines[i]);
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header.trim()] = values[index] || '';
+            });
+            data.push(row);
+        } catch (error) {
+            errors.push({ row: i + 1, message: error.message });
+        }
+    }
+    
+    return { data, errors };
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                current += '"';
+                i++; // Skip next quote
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current);
+    return result;
+}
+
 // Admin credentials from environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
@@ -283,6 +336,18 @@ wss.on('connection', (ws) => {
                 case 'resetGame':
                     handleResetGame(ws, data);
                     break;
+                case 'chatMessage':
+                    handleChatMessage(ws, data);
+                    break;
+                case 'typing':
+                    handleTyping(ws, data);
+                    break;
+                case 'stopTyping':
+                    handleStopTyping(ws, data);
+                    break;
+                case 'toggleReaction':
+                    handleToggleReaction(ws, data);
+                    break;
             }
         } catch (error) {
             console.error('Error handling message:', error);
@@ -325,7 +390,8 @@ wss.on('connection', (ws) => {
             diceValue: null,
             drawnCards: [],
             selectedCardsHistory: [],
-            usedCardIds: []
+            usedCardIds: [],
+            chatMessages: []
         };
 
         gameSessions.set(sessionId, session);
@@ -489,7 +555,7 @@ wss.on('connection', (ws) => {
                         !session.usedCardIds.includes(card.id)
                     );
 
-                    if (availableCards.length === 0) {
+                    if (availableCards.length <= 7) {
                         console.log(`No cards available in session ${data.sessionId}, resetting usedCardIds`);
                         session.usedCardIds = [];
                         availableCards = [...allCards];
@@ -674,6 +740,105 @@ wss.on('connection', (ws) => {
         console.log(`Player resigned in session ${data.sessionId}`);
     }
 
+
+    function handleChatMessage(ws, data) {
+        const session = gameSessions.get(data.sessionId);
+        
+        if (!session) return;
+
+        const message = {
+            id: Date.now(),
+            playerId: data.playerId,
+            playerName: data.playerName,
+            message: data.message,
+            timestamp: new Date().toLocaleTimeString('ja-JP', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            }),
+            reactions: {}
+        };
+
+        session.chatMessages.push(message);
+
+        broadcast(data.sessionId, {
+            type: 'chatMessageReceived',
+            message,
+            session
+        });
+
+        console.log(`Chat message in session ${data.sessionId}: ${data.playerName}: ${data.message}`);
+    }
+
+
+    function handleTyping(ws, data) {
+        const session = gameSessions.get(data.sessionId);
+        if (!session) return;
+
+        // Broadcast to all except sender
+        broadcast(data.sessionId, {
+            type: 'userTyping',
+            playerId: data.playerId,
+            playerName: data.playerName
+        }, data.playerId);
+    }
+
+    function handleStopTyping(ws, data) {
+        const session = gameSessions.get(data.sessionId);
+        if (!session) return;
+
+        // Broadcast to all except sender
+        broadcast(data.sessionId, {
+            type: 'userStoppedTyping',
+            playerId: data.playerId,
+            playerName: data.playerName
+        }, data.playerId);
+    }
+
+    function handleToggleReaction(ws, data) {
+        const session = gameSessions.get(data.sessionId);
+        if (!session) return;
+
+        const messageIndex = session.chatMessages.findIndex(m => m.id === data.messageId);
+        if (messageIndex === -1) return;
+
+        const message = session.chatMessages[messageIndex];
+        
+        // Initialize reactions object if it doesn't exist
+        if (!message.reactions) {
+            message.reactions = {};
+        }
+
+        // Initialize emoji array if it doesn't exist
+        if (!message.reactions[data.emoji]) {
+            message.reactions[data.emoji] = [];
+        }
+
+        // Toggle reaction
+        const userIndex = message.reactions[data.emoji].indexOf(data.playerId);
+        if (userIndex === -1) {
+            // Add reaction
+            message.reactions[data.emoji].push(data.playerId);
+        } else {
+            // Remove reaction
+            message.reactions[data.emoji].splice(userIndex, 1);
+            
+            // Clean up empty arrays
+            if (message.reactions[data.emoji].length === 0) {
+                delete message.reactions[data.emoji];
+            }
+        }
+
+        // Broadcast to all
+        broadcast(data.sessionId, {
+            type: 'reactionToggled',
+            messageId: data.messageId,
+            message: message,
+            session
+        });
+
+        console.log(`Reaction toggled in session ${data.sessionId}: ${data.emoji} on message ${data.messageId}`);
+    }
+
     function handleResetGame(ws, data) {
         const session = gameSessions.get(data.sessionId);
         
@@ -695,6 +860,7 @@ wss.on('connection', (ws) => {
         session.drawnCards = [];
         session.selectedCardsHistory = [];
         session.usedCardIds = [];
+        session.chatMessages = [];
 
         broadcast(data.sessionId, {
             type: 'gameReset',
@@ -1094,6 +1260,353 @@ app.delete('/api/admin/categories/:id', requireAdmin, (req, res) => {
     });
 });
 
+// Validation functions for CSV import
+function validateJobCard(row, rowIndex) {
+    const errors = [];
+    
+    if (!row.name_en || row.name_en.trim() === '') {
+        errors.push(`Row ${rowIndex}: name_en is required`);
+    }
+    
+    if (!row.name_ja || row.name_ja.trim() === '') {
+        errors.push(`Row ${rowIndex}: name_ja is required`);
+    }
+    
+    if (row.targetPoints && isNaN(parseInt(row.targetPoints))) {
+        errors.push(`Row ${rowIndex}: targetPoints must be a number`);
+    }
+    
+    return errors;
+}
+
+function validateSkillCard(row, rowIndex) {
+    const errors = [];
+    
+    if (!row.name_en || row.name_en.trim() === '') {
+        errors.push(`Row ${rowIndex}: name_en is required`);
+    }
+    
+    if (!row.name_ja || row.name_ja.trim() === '') {
+        errors.push(`Row ${rowIndex}: name_ja is required`);
+    }
+    
+    return errors;
+}
+
+function validateMissionCard(row, rowIndex) {
+    const errors = [];
+    
+    if (!row.descriptionHtml_en || row.descriptionHtml_en.trim() === '') {
+        errors.push(`Row ${rowIndex}: descriptionHtml_en is required`);
+    }
+    
+    if (!row.descriptionHtml_ja || row.descriptionHtml_ja.trim() === '') {
+        errors.push(`Row ${rowIndex}: descriptionHtml_ja is required`);
+    }
+    
+    if (row.categoryId && isNaN(parseInt(row.categoryId))) {
+        errors.push(`Row ${rowIndex}: categoryId must be a number`);
+    }
+    
+    return errors;
+}
+
+// CSV Import API - Job Cards
+app.post('/api/admin/import/jobs', (req, res) => {
+    const { csvData, preview = false } = req.body;
+    
+    if (!csvData) {
+        return res.status(400).json({ error: 'CSV data is required' });
+    }
+    
+    // Remove UTF-8 BOM if present
+    const cleanedCSV = csvData.replace(/^\uFEFF/, '');
+    
+    // Parse CSV
+    const parsed = parseCSV(cleanedCSV);
+    
+    if (parsed.errors.length > 0) {
+        return res.status(400).json({ 
+            error: 'CSV parsing error', 
+            details: parsed.errors 
+        });
+    }
+    
+    const rows = parsed.data;
+    const validationErrors = [];
+    
+    // Validate all rows
+    rows.forEach((row, index) => {
+        const errors = validateJobCard(row, index + 2); // +2 for header and 0-index
+        validationErrors.push(...errors);
+    });
+    
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ 
+            error: 'Validation failed', 
+            details: validationErrors 
+        });
+    }
+    
+    // Preview mode - return parsed data
+    if (preview) {
+        return res.json({ 
+            ok: true, 
+            preview: rows,
+            totalRows: rows.length
+        });
+    }
+    
+    // Execute mode - insert/update to database
+    db.serialize(() => {
+        db.all('SELECT * FROM job_cards', (err, existingRows) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const stmt = db.prepare(`
+                INSERT OR REPLACE INTO job_cards 
+                (id, name_en, name_ja, descriptionHtml_en, descriptionHtml_ja, targetPoints)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `);
+            
+            let insertedCount = 0;
+            let updatedCount = 0;
+            
+            rows.forEach((row) => {
+                const id = row.id ? parseInt(row.id) : null;
+                const existing = existingRows.find(e => e.id === id);
+                
+                if (existing) {
+                    updatedCount++;
+                } else {
+                    insertedCount++;
+                }
+                
+                stmt.run(
+                    id,
+                    row.name_en,
+                    row.name_ja,
+                    row.descriptionHtml_en || '',
+                    row.descriptionHtml_ja || '',
+                    parseInt(row.targetPoints)
+                );
+            });
+            
+            stmt.finalize((err) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                res.json({ 
+                    ok: true, 
+                    inserted: insertedCount,
+                    updated: updatedCount,
+                    total: rows.length
+                });
+            });
+        });
+    });
+});
+
+// CSV Import API - Skill Cards
+app.post('/api/admin/import/skills', (req, res) => {
+    const { csvData, preview = false } = req.body;
+    
+    if (!csvData) {
+        return res.status(400).json({ error: 'CSV data is required' });
+    }
+    
+    // Remove UTF-8 BOM if present
+    const cleanedCSV = csvData.replace(/^\uFEFF/, '');
+    
+    // Parse CSV
+    const parsed = parseCSV(cleanedCSV);
+    
+    if (parsed.errors.length > 0) {
+        return res.status(400).json({ 
+            error: 'CSV parsing error', 
+            details: parsed.errors 
+        });
+    }
+    
+    const rows = parsed.data;
+    const validationErrors = [];
+    
+    // Validate all rows
+    rows.forEach((row, index) => {
+        const errors = validateSkillCard(row, index + 2);
+        validationErrors.push(...errors);
+    });
+    
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ 
+            error: 'Validation failed', 
+            details: validationErrors 
+        });
+    }
+    
+    // Preview mode
+    if (preview) {
+        return res.json({ 
+            ok: true, 
+            preview: rows,
+            totalRows: rows.length
+        });
+    }
+    
+    // Execute mode
+    db.serialize(() => {
+        db.all('SELECT * FROM skill_cards', (err, existingRows) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const stmt = db.prepare(`
+                INSERT OR REPLACE INTO skill_cards 
+                (id, name_en, name_ja, descriptionHtml_en, descriptionHtml_ja, matchesJobs)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `);
+            
+            let insertedCount = 0;
+            let updatedCount = 0;
+            
+            rows.forEach((row) => {
+                const id = row.id ? parseInt(row.id) : null;
+                const existing = existingRows.find(e => e.id === id);
+                
+                if (existing) {
+                    updatedCount++;
+                } else {
+                    insertedCount++;
+                }
+                
+                stmt.run(
+                    id,
+                    row.name_en,
+                    row.name_ja,
+                    row.descriptionHtml_en || '',
+                    row.descriptionHtml_ja || '',
+                    row.matchesJobs || ''
+                );
+            });
+            
+            stmt.finalize((err) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                res.json({ 
+                    ok: true, 
+                    inserted: insertedCount,
+                    updated: updatedCount,
+                    total: rows.length
+                });
+            });
+        });
+    });
+});
+
+// CSV Import API - Missions
+app.post('/api/admin/import/missions', (req, res) => {
+    const { csvData, preview = false } = req.body;
+    
+    if (!csvData) {
+        return res.status(400).json({ error: 'CSV data is required' });
+    }
+    
+    // Remove UTF-8 BOM if present
+    const cleanedCSV = csvData.replace(/^\uFEFF/, '');
+    
+    // Parse CSV
+    const parsed = parseCSV(cleanedCSV);
+    
+    if (parsed.errors.length > 0) {
+        return res.status(400).json({ 
+            error: 'CSV parsing error', 
+            details: parsed.errors 
+        });
+    }
+    
+    const rows = parsed.data;
+    const validationErrors = [];
+    
+    // Validate all rows
+    rows.forEach((row, index) => {
+        const errors = validateMissionCard(row, index + 2);
+        validationErrors.push(...errors);
+    });
+    
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ 
+            error: 'Validation failed', 
+            details: validationErrors 
+        });
+    }
+    
+    // Preview mode
+    if (preview) {
+        return res.json({ 
+            ok: true, 
+            preview: rows,
+            totalRows: rows.length
+        });
+    }
+    
+    // Execute mode
+    db.serialize(() => {
+        db.all('SELECT * FROM missions', (err, existingRows) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const stmt = db.prepare(`
+                INSERT OR REPLACE INTO missions 
+                (id, name_en, name_ja, descriptionHtml_en, descriptionHtml_ja, categoryId, target_en, target_ja, isSpecial)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            
+            let insertedCount = 0;
+            let updatedCount = 0;
+            
+            rows.forEach((row) => {
+                const id = row.id ? parseInt(row.id) : null;
+                const existing = existingRows.find(e => e.id === id);
+                
+                if (existing) {
+                    updatedCount++;
+                } else {
+                    insertedCount++;
+                }
+                
+                stmt.run(
+                    id,
+                    row.name_en || '',
+                    row.name_ja || '',
+                    row.descriptionHtml_en,
+                    row.descriptionHtml_ja,
+                    row.categoryId ? parseInt(row.categoryId) : null,
+                    row.target_en || '',
+                    row.target_ja || '',
+                    row.isSpecial === '1' || row.isSpecial === 'true' ? 1 : 0
+                );
+            });
+            
+            stmt.finalize((err) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                res.json({ 
+                    ok: true, 
+                    inserted: insertedCount,
+                    updated: updatedCount,
+                    total: rows.length
+                });
+            });
+        });
+    });
+});
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log('=================================');
