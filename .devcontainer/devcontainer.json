@@ -1,0 +1,17 @@
+{
+  "name": "codespaces-ready",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  // 例: アプリが 3000 で起動する想定
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "app", "onAutoForward": "openBrowser" }
+  },
+
+  // 初回の環境構築（npm install / initdb）
+  // ※再ビルドでも走る可能性があるので initdb は「何度走っても壊れない」実装にしておくのが理想
+  "postCreateCommand": "npm install && npm run initdb",
+
+  // コンテナを開くたびに起動（npm start）
+  "postStartCommand": "npm start"
+}
