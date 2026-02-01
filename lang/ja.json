@@ -61,7 +61,9 @@
     "cardSelectHint": "カード中央をクリックで選択 | 下部をクリックで詳細表示",
     "viewDetails": "詳細を見る",
     "backToFront": "表に戻る",
-    "alreadySelectedByOther": "選択済み"
+    "alreadySelectedByOther": "選択済み",
+    "backToTop": "トップページに戻る",
+    "backToTopConfirm": "トップページに戻りますか？（現在のゲームは終了します）"
   },
   "admin": {
     "pageTitle": "管理画面 - カードゲーム",
@@ -121,7 +123,26 @@
     "loginError": "ユーザー名またはパスワードが正しくありません",
     "defaultCredentials": "デフォルト: admin / admin123",
     "imageOrUrl": "または画像URLを入力",
-    "imageSizeError": "画像サイズは20MB以下にしてください"
+    "imageSizeError": "画像サイズは20MB以下にしてください",
+    "exportCSV": "📤 CSV出力",
+    "importCSV": "📥 CSV取込",
+    "csvImportTitle": "CSVファイルを取り込む",
+    "selectFile": "ファイル選択",
+    "selectCsvFile": "CSVファイルを選択",
+    "preview": "プレビュー",
+    "import": "取り込み",
+    "previewData": "データプレビュー",
+    "importing": "取り込み中...",
+    "importSuccess": "取り込み完了！",
+    "inserted": "追加",
+    "updated": "更新",
+    "records": "件",
+    "totalRecords": "合計",
+    "validationErrors": "バリデーションエラー",
+    "csvParseError": "CSV解析エラー",
+    "noFileSelected": "ファイルが選択されていません",
+    "firstRows": "最初の5行",
+    "importResults": "取り込み結果"
   },
   "errors": {
     "UNAUTHORIZED": "認証が必要です",

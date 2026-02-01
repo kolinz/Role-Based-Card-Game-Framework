@@ -61,7 +61,9 @@
     "cardSelectHint": "Click center to select | Click bottom for details",
     "viewDetails": "View Details",
     "backToFront": "Back",
-    "alreadySelectedByOther": "Already Selected"
+    "alreadySelectedByOther": "Already Selected",
+    "backToTop": "Back to Top Page",
+    "backToTopConfirm": "Return to top page? (Current game will be ended)"
   },
   "admin": {
     "pageTitle": "Admin Dashboard - Card Game",
@@ -121,7 +123,26 @@
     "loginError": "Invalid username or password",
     "defaultCredentials": "Default: admin / admin123",
     "imageOrUrl": "Or enter image URL",
-    "imageSizeError": "Image size must be under 20MB"
+    "imageSizeError": "Image size must be under 20MB",
+    "exportCSV": "📤 Export CSV",
+    "importCSV": "📥 Import CSV",
+    "csvImportTitle": "Import CSV File",
+    "selectFile": "Select File",
+    "selectCsvFile": "Select CSV File",
+    "preview": "Preview",
+    "import": "Import",
+    "previewData": "Preview Data",
+    "importing": "Importing...",
+    "importSuccess": "Import successful!",
+    "inserted": "Inserted",
+    "updated": "Updated",
+    "records": "records",
+    "totalRecords": "Total records",
+    "validationErrors": "Validation Errors",
+    "csvParseError": "CSV parsing error",
+    "noFileSelected": "No file selected",
+    "firstRows": "First 5 rows",
+    "importResults": "Import Results"
   },
   "errors": {
     "UNAUTHORIZED": "Unauthorized access",
