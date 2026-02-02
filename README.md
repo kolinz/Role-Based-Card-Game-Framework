@@ -59,3 +59,58 @@ npm start
 - **パスワード**: `admin123`
 
 **⚠️ 重要**: 本番環境では必ず`.env`ファイルを作成し、強力なパスワードに変更してください！
+
+## サービス化（systemd）する方法
+Role Based Card Game Framework のパスがが、/home/ubuntu/Role-Based-Card-Game-Framework とする場合
+### systemd サービスファイルの作成
+下記のコマンドを実行します。
+```
+sudo nano /etc/systemd/system/career-card-game.service
+```
+中身は、次のように記述します。
+```
+[Unit]
+Description=Career Card Game - Multiplayer WebSocket Server
+Documentation=https://github.com/yourusername/career-card-game
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/Role-Based-Card-Game-Framework
+EnvironmentFile=/home/ubuntu/Role-Based-Card-Game-Framework/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/career-card-game/access.log
+StandardError=append:/var/log/career-card-game/error.log
+
+# セキュリティ設定
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+保存します。
+
+### ログディレクトリの作成
+次時のコマンドを実行します。
+```
+sudo mkdir -p /var/log/career-card-game
+sudo chown ubuntu:ubuntu /var/log/career-card-game
+```
+
+### サービスの有効化と起動
+次のコマンドを実行します。
+```
+sudo systemctl daemon-reload
+sudo systemctl enable career-card-game
+sudo systemctl start career-card-game
+```
+起動確認として、次のコマンドを実行します。
+```
+sudo systemctl status career-card-game
+```
