@@ -21,9 +21,12 @@
 - ✅ ゲーム運営者は、手元のPCや外部のサーバーに本環境をセットアップ
 - ✅ プレイヤーは、Webブラウザのみ
 
-## 📋 ゲーム基盤として必要な環境
-- Node.js 20以上
-- npm または yarn
+## 📋 必要な環境
+- ゲーム運営者は、ゲーム環境構築にあたり、下記が必要です。
+　- Node.js 20以上
+　- npm または yarn
+- プレイヤー
+  - Webブラウザのみです。スマートフォンやタブレット端末、パソコンなど  
 
 ## すぐにはじめたい人向け
 [クイックスタートガイド](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/QUICKSTART.md) をご覧ください。
