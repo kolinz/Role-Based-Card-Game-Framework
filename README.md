@@ -61,7 +61,7 @@ npm start
 **⚠️ 重要**: 本番環境では必ず`.env`ファイルを作成し、強力なパスワードに変更してください！
 
 ## サービス化（systemd）する方法
-Role Based Card Game Framework のパスがが、/home/ubuntu/Role-Based-Card-Game-Framework とする場合
+Role Based Card Game Framework のパスが、/home/ubuntu/Role-Based-Card-Game-Framework とする場合
 ### systemd サービスファイルの作成
 下記のコマンドを実行します。
 ```
