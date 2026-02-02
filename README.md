@@ -23,9 +23,9 @@
 - ゲーム運営環境
   - Node.js 20以上
   - npm または yarn
-  - Webブラウザから管理画面 admin.html にアクセス
+  - Webブラウザから管理画面にアクセス
 - プレイヤー
-  - Webブラウザのみです。スマートフォンやタブレット端末、パソコンなど  
+  - Webブラウザのみ（インストール不要） 
 
 ## すぐにはじめたい人向け
 [クイックスタートガイド](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/QUICKSTART.md) をご覧ください。
