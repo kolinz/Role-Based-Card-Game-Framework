@@ -10,7 +10,8 @@
 4. [管理画面](#anchor4)
 5. [ゲームの起動(npm start)をサービス化する方法](#anchor5)
 6. [本番環境で運用する場合](#anchor6)
-7. [今後の作業](#anchor7)
+7. [教育機関向けの振り返りワークシート](#anchor7)
+8. [今後の作業](#anchor99)
 
 
 <a id="anchor1"></a>
@@ -135,8 +136,11 @@ sudo systemctl status career-card-game
 HTTPS接続が必要である、リバースプロキシもしくは、リバースプロキシ相当のサービスを使ってください。リバースプロキシ設定は[こちらの資料](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/NGINX-REVERSE-PROXY.md)からご覧になることができます。
 
 <a id="anchor7"></a>
+## 振り返りワークシート
+中学や高校の探求学習、大学のキャリア教育向けにご活用ください。こちらから[ダウンロード](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/Reflection-sheet-sample.docx)することができます。
+
+<a id="anchor99"></a>
 ## 今後の作業
-- プレイ後の振り返りワークシートの作成
 - プレイガイドの作成
 - localtonetなどのトンネルサービスを使ったゲーム運営方法
 - 初期のサンプルデータセットのアップデート（すぐに遊べるようにする）
