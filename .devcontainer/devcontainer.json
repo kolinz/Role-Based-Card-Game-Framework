@@ -13,7 +13,8 @@
   "portsAttributes": {
     "3000": {
       "label": "Game Server",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     }
   },
   
