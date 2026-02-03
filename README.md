@@ -1,7 +1,13 @@
 # Role Based Card Game Framework
-
+## 概要
 - オンラインマルチプレイヤー対応のカードゲームです。管理画面を通してカードを作成管理するため、軽量なオンラインカードゲームエンジンとしても使うことができます。
 - ゲーム運営者は、パソコン、Raspberry Pi、一般的なサーバー、AWSやIBM Cloudなどの一般的なクラウドの仮想マシンなどで環境構築し、プレイヤーはゲーム運営者が構築した環境に普段使っている「Webブラウザ」からアクセスすることで操作できます。
+
+### Githubでのダウンロード操作
+Githubからファイルをダウンロードする場合は、下図のように「Download raw file」のアイコンをクリックしましょう。
+
+<img width="244" height="105" alt="image" src="https://github.com/user-attachments/assets/a400e9ea-4643-46a4-a1b0-b07e6f226ddd" />
+
 
 ## 目次
 1. [実装済みの機能](#anchor1)
