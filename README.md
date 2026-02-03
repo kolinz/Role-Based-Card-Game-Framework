@@ -144,7 +144,7 @@ HTTPS接続が必要である、リバースプロキシもしくは、リバー
 
 <a id="anchor7"></a>
 ## 振り返りワークシート
-中学や高校の探求学習、大学のキャリア教育向けにご活用ください。こちらから[ダウンロード](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/Reflection-sheet-sample.docx)することができます。
+中学や高校の探求学習、大学のキャリア教育向けにご活用ください。こちらから[ダウンロード](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/Reflection-sheet-sample.docx)することができます。必要に応じて変更してください。
 
 <a id="anchor99"></a>
 ## 今後の作業
