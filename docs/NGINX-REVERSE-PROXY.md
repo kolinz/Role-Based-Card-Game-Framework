@@ -1,7 +1,39 @@
 # Nginxによるリバースプロキシ設定手順
+HTTPS接続を行うために、リバースプロキシを構築する必要があるため、その手順です。
 
-## Let's Encryptによる証明書と証明書の秘密鍵の取得
+## Nginxのインストール
+次のコマンドを実行します。最新バージョンのNginxをインストールします。
+```
+sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+sudo apt update
+sudo apt install -y nginx
+sudo systemctl start nginx
+```
 
+## Let's Encryptによる証明書と秘密鍵の取得
+次のコマンドを実行します。Let's Encyptの証明書と秘密鍵の取得に必要なソフトウェアのインストール。
+```
+sudo apt update
+sudo apt install certbot python3-certbot-nginx
+```
+証明書と秘密鍵の発行のため、次のコマンドを実行します。
+```
+sudo certbot certonly --nginx -d ドメイン名
+```
+実行結果
+```
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/ドメイン名/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/ドメイン名/privkey.pem
+This certificate expires on 証明書の有効期限日.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+```
+- fullchain.pem が証明書
+- privkey.pem が秘密鍵
+- 証明書の有効期限日が来る前に証明書を更新すること
 
 ## Nginx設定ファイルの場所を探す
 パスを /etc/nginx/conf.d　とした場合。パスが異なる場合は、適宜読み替えてください。
