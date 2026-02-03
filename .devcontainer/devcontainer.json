@@ -1,17 +1,41 @@
 {
-  "name": "codespaces-ready",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
-
-  // 例: アプリが 3000 で起動する想定
-  "forwardPorts": [3000],
-  "portsAttributes": {
-    "3000": { "label": "app", "onAutoForward": "openBrowser" }
+  "name": "Career Skills Card Game",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    }
   },
-
-  // 初回の環境構築（npm install / initdb）
-  // ※再ビルドでも走る可能性があるので initdb は「何度走っても壊れない」実装にしておくのが理想
+  
+  "forwardPorts": [3000],
+  
+  "portsAttributes": {
+    "3000": {
+      "label": "Game Server",
+      "onAutoForward": "notify"
+    }
+  },
+  
   "postCreateCommand": "npm install && npm run initdb",
-
-  // コンテナを開くたびに起動（npm start）
-  "postStartCommand": "npm start"
+  
+  // Auto-start server on Codespaces launch (comment out for manual start)
+  "postStartCommand": "npm start",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-node-azure-pack"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "javascript.updateImportsOnFileMove.enabled": "always"
+      }
+    }
+  },
+  
+  "remoteUser": "node"
 }
