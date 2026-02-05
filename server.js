@@ -218,7 +218,7 @@ function insertSampleData() {
         ['Resource Management', 'リソース管理', 'Budget and time management', '予算と時間管理', 4]
     ];
 
-    const insertCategory = db.prepare('INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder) VALUES (?, ?, ?, ?, ?)');
+    const insertCategory = db.prepare('INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder, color) VALUES (?, ?, ?, ?, ?, ?)');
     categories.forEach(cat => insertCategory.run(cat));
     insertCategory.finalize();
 
@@ -1248,7 +1248,7 @@ app.delete('/api/admin/missions/:id', requireAdmin, (req, res) => {
 
 // Admin API - Categories
 app.post('/api/admin/categories', requireAdmin, (req, res) => {
-    const { name_en, name_ja, description_en, description_ja, sortOrder } = req.body;
+    const { name_en, name_ja, description_en, description_ja, sortOrder, color } = req.body;
     
     if (!name_en || !name_ja) {
         return res.status(400).json({ 
@@ -1258,8 +1258,8 @@ app.post('/api/admin/categories', requireAdmin, (req, res) => {
     }
     
     db.run(
-        'INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder) VALUES (?, ?, ?, ?, ?)',
-        [name_en, name_ja, description_en, description_ja, sortOrder],
+        'INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder, color) VALUES (?, ?, ?, ?, ?, ?)',
+        [name_en, name_ja, description_en, description_ja, sortOrder, color || '#667eea'],
         function(err) {
             if (err) {
                 res.status(500).json({ 
@@ -1274,11 +1274,11 @@ app.post('/api/admin/categories', requireAdmin, (req, res) => {
 });
 
 app.put('/api/admin/categories/:id', requireAdmin, (req, res) => {
-    const { name_en, name_ja, description_en, description_ja, sortOrder } = req.body;
+    const { name_en, name_ja, description_en, description_ja, sortOrder, color } = req.body;
     
     db.run(
-        'UPDATE mission_categories SET name_en = ?, name_ja = ?, description_en = ?, description_ja = ?, sortOrder = ? WHERE id = ?',
-        [name_en, name_ja, description_en, description_ja, sortOrder, req.params.id],
+        'UPDATE mission_categories SET name_en = ?, name_ja = ?, description_en = ?, description_ja = ?, sortOrder = ?, color = ? WHERE id = ?',
+        [name_en, name_ja, description_en, description_ja, sortOrder, color || '#667eea', req.params.id],
         (err) => {
             if (err) {
                 res.status(500).json({ 
