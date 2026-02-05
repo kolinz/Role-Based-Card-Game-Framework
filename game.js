@@ -206,6 +206,13 @@ class GameClient {
                 this.render();
                 break;
 
+            case 'playerLeft':
+                this.session = data.session;
+                this.render();
+                console.log(`Player ${data.playerName} left the session`);
+                break;
+
+
             case 'jobSelected':
                 this.session = data.session;
                 this.render();

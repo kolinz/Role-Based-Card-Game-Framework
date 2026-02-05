@@ -365,6 +365,33 @@ wss.on('connection', (ws) => {
             if (sessionClients) {
                 sessionClients.delete(currentPlayerId);
             }
+            
+            // セッションからプレイヤーを削除
+            const session = gameSessions.get(currentSessionId);
+            if (session) {
+                const playerIndex = session.players.findIndex(p => p.id === currentPlayerId);
+                if (playerIndex !== -1) {
+                    const removedPlayer = session.players[playerIndex];
+                    session.players.splice(playerIndex, 1);
+                    
+                    // 他のプレイヤーに通知
+                    broadcast(currentSessionId, {
+                        type: 'playerLeft',
+                        playerId: currentPlayerId,
+                        playerName: removedPlayer.name,
+                        session
+                    });
+                    
+                    console.log(`Player ${currentPlayerId} (${removedPlayer.name}) left session ${currentSessionId}`);
+                    
+                    // セッションが空になった場合は削除
+                    if (session.players.length === 0) {
+                        gameSessions.delete(currentSessionId);
+                        clients.delete(currentSessionId);
+                        console.log(`Session ${currentSessionId} deleted (no players)`);
+                    }
+                }
+            }
         }
     });
 
