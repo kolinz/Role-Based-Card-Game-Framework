@@ -111,13 +111,13 @@ Ubutnu を前提にしています。後述の意味が分かる人は、Ubuntu�
 #### systemd サービスファイルの作成
 下記のコマンドを実行します。
 ```
-sudo nano /etc/systemd/system/career-card-game.service
+sudo nano /etc/systemd/system/rolebased-card-game.service
 ```
 中身は、次のように記述します。
 ```
 [Unit]
-Description=Career Card Game - Multiplayer WebSocket Server
-Documentation=https://github.com/yourusername/career-card-game
+Description=Role based Card Game - Multiplayer WebSocket Server
+Documentation=https://github.com/kolinz/Role-Based-Card-Game-Framework/
 After=network.target
 
 [Service]
@@ -130,8 +130,8 @@ Environment=PORT=3000
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=10
-StandardOutput=append:/var/log/career-card-game/access.log
-StandardError=append:/var/log/career-card-game/error.log
+StandardOutput=append:/var/log/rolebased-card-game/access.log
+StandardError=append:/var/log/rolebased-card-game/error.log
 
 # セキュリティ設定
 NoNewPrivileges=true
@@ -145,20 +145,20 @@ WantedBy=multi-user.target
 ### ログディレクトリの作成
 次時のコマンドを実行します。
 ```
-sudo mkdir -p /var/log/career-card-game
-sudo chown ubuntu:ubuntu /var/log/career-card-game
+sudo mkdir -p /var/log/rolebased-card-game
+sudo chown ubuntu:ubuntu /var/log/rolebased-card-game
 ```
 
 ### サービスの有効化と起動
 次のコマンドを実行します。
 ```
 sudo systemctl daemon-reload
-sudo systemctl enable career-card-game
-sudo systemctl start career-card-game
+sudo systemctl enable rolebased-card-game
+sudo systemctl start rolebased-card-game
 ```
 起動確認として、次のコマンドを実行します。
 ```
-sudo systemctl status career-card-game
+sudo systemctl status rolebased-card-game
 ```
 
 ### 本番環境で運用する場合
