@@ -63,7 +63,12 @@
     "backToFront": "表に戻る",
     "alreadySelectedByOther": "選択済み",
     "backToTop": "トップページに戻る",
-    "backToTopConfirm": "トップページに戻りますか？（現在のゲームは終了します）"
+    "backToTopConfirm": "トップページに戻りますか？（現在のゲームは終了します）",
+    "finished": "ゴール!",
+    "rankSuffix": "位",
+    "gameCompleted": "全員ゴール!",
+    "playerFinished": "プレイヤーゴール!",
+    "finishedRank": "が"
   },
   "admin": {
     "pageTitle": "管理画面 - カードゲーム",
