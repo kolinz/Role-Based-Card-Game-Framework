@@ -17,13 +17,9 @@ Githubからファイルをダウンロードする場合は、下図のよう�
 
 ## 目次
 1. [実装済みの機能](#anchor1)
-2. [必要な環境](#anchor2)
-3. [セットアップ手順](#anchor3)
-4. [管理画面](#anchor4)
-5. [ゲームの起動(npm start)をサービス化する方法](#anchor5)
-6. [本番環境で運用する場合](#anchor6)
-7. [教育機関向けの振り返りワークシート](#anchor7)
-8. [今後の作業](#anchor99)
+2. [教育機関向けの振り返りワークシート](#anchor2)
+3. [導入について](#anchor3)
+99. [今後の作業](#anchor99)
 
 
 <a id="anchor1"></a>
@@ -67,30 +63,32 @@ Githubからファイルをダウンロードする場合は、下図のよう�
 - ✅ 管理画面：カードのCSV Import / Export
 
 <a id="anchor2"></a>
-## 📋 必要な環境
-### ゲーム運営環境 
+## 振り返りワークシート
+中学や高校の探求学習、大学のキャリア教育向けにご活用ください。こちらから[ダウンロード](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/Reflection-sheet-sample.docx)することができます。必要に応じて変更してください。
+
+<a id="anchor3"></a>
+## 🚀 導入について
+### ゲームサーバー 
   - Node.js 20以上
   - npm または yarn
   - Webブラウザから管理画面にアクセス
 ### プレイヤー
   - Webブラウザのみ（インストール不要） 
-
-<a id="anchor3"></a>
-## 🚀 セットアップ手順
-### 1. 依存関係のインストール
+### 📋 必要な環境
+#### 1. 依存関係のインストール
 ```bash
 npm install
 ```
-### 2. 環境変数の設定（オプション）
+#### 2. 環境変数の設定（オプション）
 ```bash
 cp .env.example .env
 # .envファイルを編集して管理者パスワードを変更
 ```
-### 3. データベースの初期化
+#### 3. データベースの初期化
 ```bash
 npm run initdb
 ```
-### 4. サーバーの起動
+#### 4. サーバーの起動
 ```bash
 npm start
 ```
@@ -98,8 +96,7 @@ npm start
 - ゲーム画面: http://localhost:3000
 - 管理画面: http://localhost:3000/admin.html
 
-<a id="anchor4"></a>
-## 🔐 管理画面
+### 🔐 管理画面にアクセス
 
 デフォルトのログイン情報:
 - **ユーザー名**: `admin`
@@ -107,12 +104,11 @@ npm start
 
 **⚠️ 重要**: 本番環境では必ず`.env`ファイルを作成し、強力なパスワードに変更してください！
 
-<a id="anchor5"></a>
-## ゲームの起動(npm start)をサービス化する方法
+### ゲームの起動(npm start)をサービス化する方法
 Role Based Card Game Framework のパスが、/home/ubuntu/Role-Based-Card-Game-Framework とする場合 について述べます。パスが異なる場合は、適宜読み替えてください。
 Ubutnu を前提にしています。後述の意味が分かる人は、Ubuntu以外のRedHat系でも問題ないはずなので、適宜読み替えてください。
 
-### systemd サービスファイルの作成
+#### systemd サービスファイルの作成
 下記のコマンドを実行します。
 ```
 sudo nano /etc/systemd/system/career-card-game.service
@@ -165,13 +161,8 @@ sudo systemctl start career-card-game
 sudo systemctl status career-card-game
 ```
 
-<a id="anchor6"></a>
-## 本番環境で運用する場合
+### 本番環境で運用する場合
 HTTPS接続が必要である、リバースプロキシもしくは、リバースプロキシ相当のサービスを使ってください。リバースプロキシ設定は[こちらの資料](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/NGINX-REVERSE-PROXY.md)からご覧になることができます。
-
-<a id="anchor7"></a>
-## 振り返りワークシート
-中学や高校の探求学習、大学のキャリア教育向けにご活用ください。こちらから[ダウンロード](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/Reflection-sheet-sample.docx)することができます。必要に応じて変更してください。
 
 <a id="anchor99"></a>
 ## 今後の作業
