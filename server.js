@@ -1,4 +1,4 @@
-// FILE: server.js
+// FILE: server.js (全員ゴールまで続けるシステム対応版)
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -382,7 +382,9 @@ wss.on('connection', (ws) => {
                 points: {},
                 retired: false,
                 jobSelected: false,
-                selectedSkillCardIds: []
+                selectedSkillCardIds: [],
+                finished: false,        // ★追加
+                finishRank: null        // ★追加
             }],
             maxPlayers: data.maxPlayers || 4,
             currentPlayerIndex: 0,
@@ -391,7 +393,9 @@ wss.on('connection', (ws) => {
             drawnCards: [],
             selectedCardsHistory: [],
             usedCardIds: [],
-            chatMessages: []
+            chatMessages: [],
+            finishedPlayers: [],        // ★追加
+            allFinished: false          // ★追加
         };
 
         gameSessions.set(sessionId, session);
@@ -450,7 +454,9 @@ wss.on('connection', (ws) => {
             points: {},
             retired: false,
             jobSelected: false,
-            selectedSkillCardIds: []
+            selectedSkillCardIds: [],
+            finished: false,        // ★追加
+            finishRank: null        // ★追加
         };
 
         session.players.push(newPlayer);
@@ -660,8 +666,34 @@ wss.on('connection', (ws) => {
                     }
                 });
 
-                if (hasWon && currentPlayer.jobs.length > 0) {
-                    result.winner = currentPlayer;
+                // ★★★ ここが最も重要な変更 ★★★
+                if (hasWon && currentPlayer.jobs.length > 0 && !currentPlayer.finished) {
+                    // このプレイヤーをゴール済みにする
+                    currentPlayer.finished = true;
+                    const rank = session.finishedPlayers.length + 1;
+                    currentPlayer.finishRank = rank;
+                    session.finishedPlayers.push(currentPlayer.id);
+                    
+                    result.playerFinished = true;
+                    result.finishRank = rank;
+                    result.playerName = currentPlayer.name;
+                    
+                    // 全員がゴールしたかチェック（退職者を除く）
+                    const activePlayers = session.players.filter(p => !p.retired);
+                    const allFinished = activePlayers.every(p => p.finished);
+                    
+                    if (allFinished) {
+                        session.allFinished = true;
+                        result.allFinished = true;
+                        result.finalRankings = session.players
+                            .filter(p => !p.retired)
+                            .sort((a, b) => a.finishRank - b.finishRank)
+                            .map(p => ({
+                                id: p.id,
+                                name: p.name,
+                                rank: p.finishRank
+                            }));
+                    }
                 }
 
                 ws.send(JSON.stringify({
@@ -675,6 +707,15 @@ wss.on('connection', (ws) => {
                     cardType: 'skill',
                     session
                 }, currentPlayer.id);
+                
+                // 全員ゴール時に全員に通知
+                if (result.allFinished) {
+                    broadcast(data.sessionId, {
+                        type: 'gameCompleted',
+                        finalRankings: result.finalRankings,
+                        session
+                    });
+                }
             });
         } else {
             broadcast(data.sessionId, {
@@ -851,7 +892,9 @@ wss.on('connection', (ws) => {
             points: {},
             retired: false,
             jobSelected: false,
-            selectedSkillCardIds: []
+            selectedSkillCardIds: [],
+            finished: false,        // ★追加
+            finishRank: null        // ★追加
         }));
 
         session.currentPlayerIndex = 0;
@@ -861,6 +904,8 @@ wss.on('connection', (ws) => {
         session.selectedCardsHistory = [];
         session.usedCardIds = [];
         session.chatMessages = [];
+        session.finishedPlayers = [];   // ★追加
+        session.allFinished = false;    // ★追加
 
         broadcast(data.sessionId, {
             type: 'gameReset',
@@ -1621,4 +1666,3 @@ server.listen(PORT, () => {
     console.log(`   Password: ${ADMIN_PASSWORD}`);
     console.log('=================================');
 });
-

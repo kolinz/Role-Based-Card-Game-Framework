@@ -27,7 +27,8 @@ db.serialize(() => {
         name_ja TEXT NOT NULL,
         description_en TEXT,
         description_ja TEXT,
-        sortOrder INTEGER DEFAULT 0
+        sortOrder INTEGER DEFAULT 0,
+        color TEXT DEFAULT '#667eea'
     )`, (err) => {
         if (err) console.error('Error creating mission_categories:', err);
         else console.log('✅ mission_categories テーブル作成完了');
@@ -190,13 +191,13 @@ db.serialize(() => {
 
     // Mission categories (新カテゴリ構成)
     const categories = [
-        ['Technical Skills', 'テクニカルスキル（T）', 'Technical competencies for IT professionals', 'IT専門家に必要な技術的能力', 1],
-        ['Human Skills', 'ヒューマンスキル（H）', 'Interpersonal and communication skills', '対人関係とコミュニケーション能力', 2],
-        ['Conceptual Skills', 'コンセプチュアルスキル（C）', 'Strategic thinking and leadership abilities', '戦略的思考とリーダーシップ能力', 3],
-        ['Unexpected Situations', '予期せぬ事態への対応', 'Handling unexpected situations', '予期せぬ事態への対応', 4]
+        ['Technical Skills', 'テクニカルスキル（T）', 'Technical competencies for IT professionals', 'IT専門家に必要な技術的能力', 1, '#3b82f6'],
+        ['Human Skills', 'ヒューマンスキル（H）', 'Interpersonal and communication skills', '対人関係とコミュニケーション能力', 2, '#10b981'],
+        ['Conceptual Skills', 'コンセプチュアルスキル（C）', 'Strategic thinking and leadership abilities', '戦略的思考とリーダーシップ能力', 3, '#f59e0b'],
+        ['Unexpected Situations', '予期せぬ事態への対応', 'Handling unexpected situations', '予期せぬ事態への対応', 4, '#ef4444']
     ];
 
-    const insertCategory = db.prepare('INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder) VALUES (?, ?, ?, ?, ?)');
+    const insertCategory = db.prepare('INSERT INTO mission_categories (name_en, name_ja, description_en, description_ja, sortOrder, color) VALUES (?, ?, ?, ?, ?, ?)');
     categories.forEach(cat => insertCategory.run(cat));
     insertCategory.finalize(() => {
         console.log(`✅ ${categories.length}件のカテゴリを追加`);

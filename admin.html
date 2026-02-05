@@ -790,23 +790,51 @@
             document.getElementById('skills-list').innerHTML = html;
         }
 
+        // ★★★ カテゴリ別色分け対応版 loadMissions() ★★★
         async function loadMissions() {
-            const response = await fetch('/api/cards/missions');
-            const missions = await response.json();
+            // ミッションとカテゴリを並行して取得
+            const [missionsResponse, categoriesResponse] = await Promise.all([
+                fetch('/api/cards/missions'),
+                fetch('/api/categories')
+            ]);
+            const missions = await missionsResponse.json();
+            const categories = await categoriesResponse.json();
             
-            const html = missions.map(mission => `
+            // カテゴリIDからカテゴリ情報へのマッピングを作成
+            const categoryMap = {};
+            categories.forEach(cat => {
+                categoryMap[cat.id] = {
+                    name_en: cat.name_en,
+                    name_ja: cat.name_ja,
+                    color: cat.color || '#667eea'
+                };
+            });
+            
+            const html = missions.map(mission => {
+                const category = categoryMap[mission.categoryId];
+                const categoryName = category 
+                    ? `${category.name_en} / ${category.name_ja}` 
+                    : `ID: ${mission.categoryId}`;
+                
+                // カテゴリの色を使用、特別ミッションの場合は赤色
+                const cardColor = mission.isSpecial 
+                    ? '#ef4444' 
+                    : (category?.color || '#667eea');
+                
+                return `
                 <div class="card-item">
-                    <div class="card-preview" style="background: ${mission.isSpecial ? 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);'}">${mission.name_ja || mission.name_en || 'Mission'}</div>
+                    <div class="card-preview" style="background: ${cardColor};">${mission.name_ja || mission.name_en || 'Mission'}</div>
                     <div class="card-info">
                         <h3>${mission.name_en || 'Mission'} / ${mission.name_ja || 'ミッション'}</h3>
-                        <p>${i18n.t('admin.categoryId')}: ${mission.categoryId}${mission.isSpecial ? ' <strong style="color: var(--secondary);">' + i18n.t('admin.specialMission') + '</strong>' : ''}</p>
+                        <p>${i18n.t('admin.categories')}: <strong style="color: var(--primary);">${categoryName}</strong>${mission.isSpecial ? ' | <strong style="color: var(--secondary);">' + i18n.t('admin.specialMission') + '</strong>' : ''}</p>
                     </div>
                     <div class="card-actions">
                         <button class="btn" onclick="editCard('mission', ${mission.id})">${i18n.t('common.edit')}</button>
                         <button class="btn btn-danger" onclick="deleteCard('mission', ${mission.id})">${i18n.t('common.delete')}</button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             document.getElementById('missions-list').innerHTML = html;
         }
@@ -817,10 +845,10 @@
             
             const html = categories.map(cat => `
                 <div class="card-item">
-                    <div class="card-preview" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">Cat</div>
+                    <div class="card-preview" style="background: ${cat.color || '#667eea'};">Cat</div>
                     <div class="card-info">
                         <h3>${cat.name_en} / ${cat.name_ja}</h3>
-                        <p>${i18n.t('admin.sortOrder')}: ${cat.sortOrder}</p>
+                        <p>${i18n.t('admin.sortOrder')}: ${cat.sortOrder} | Color: <span style="display: inline-block; width: 20px; height: 20px; background: ${cat.color || '#667eea'}; border-radius: 4px; vertical-align: middle;"></span></p>
                     </div>
                     <div class="card-actions">
                         <button class="btn" onclick="editCard('category', ${cat.id})">${i18n.t('common.edit')}</button>
@@ -1001,9 +1029,15 @@
                             <textarea name="description_ja">${data?.description_ja || ''}</textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>${i18n.t('admin.sortOrder')}</label>
-                        <input type="number" name="sortOrder" value="${data?.sortOrder || 1}">
+                    <div class="lang-fields">
+                        <div class="form-group">
+                            <label>${i18n.t('admin.sortOrder')}</label>
+                            <input type="number" name="sortOrder" value="${data?.sortOrder || 1}">
+                        </div>
+                        <div class="form-group">
+                            <label>Color / 色</label>
+                            <input type="color" name="color" value="${data?.color || '#667eea'}" style="height: 50px; width: 100%; cursor: pointer;">
+                        </div>
                     </div>
                 `;
             }
