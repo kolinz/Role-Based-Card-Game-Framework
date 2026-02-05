@@ -63,7 +63,12 @@
     "backToFront": "Back",
     "alreadySelectedByOther": "Already Selected",
     "backToTop": "Back to Top Page",
-    "backToTopConfirm": "Return to top page? (Current game will be ended)"
+    "backToTopConfirm": "Return to top page? (Current game will be ended)",
+    "finished": "Finished!",
+    "rankSuffix": "",
+    "gameCompleted": "Game Completed!",
+    "playerFinished": "Player Finished!",
+    "finishedRank": "finished in"
   },
   "admin": {
     "pageTitle": "Admin Dashboard - Card Game",
