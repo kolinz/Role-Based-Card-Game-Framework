@@ -1,4 +1,4 @@
-// FILE: game.js (全員ゴールまで続けるシステム対応版 + カテゴリ別色分け対応)
+// FILE: game.js (全員ゴールまで続けるシステム対応版 + ターゲット表示修正)
 // ====== I18n System (API経由で翻訳ファイルを読み込む) ======
 class I18n {
     constructor() {
@@ -77,7 +77,6 @@ class GameClient {
         this.modal = null;
         this.jobCardsCache = [];
         this.skillCardsCache = [];
-        this.categoriesCache = [];
         this.flippedCards = new Set();
         this.flippedJobCards = new Set();
 
@@ -89,7 +88,6 @@ class GameClient {
         this.connect();
         this.fetchJobCards();
         this.fetchSkillCards();
-        this.fetchCategories();
         this.render();
     }
 
@@ -118,42 +116,6 @@ class GameClient {
                 this.skillCardsCache = data.ok ? data.data : data;
             })
             .catch(console.error);
-    }
-
-    fetchCategories() {
-        fetch('/api/categories')
-            .then(r => r.json())
-            .then(data => {
-                this.categoriesCache = data.ok ? data.data : data;
-            })
-            .catch(console.error);
-    }
-
-    // ★★★ カテゴリ別色分けメソッドを追加 ★★★
-    getCategoryColor(card) {
-        // 特別ミッションは常に専用色（赤）
-        if (card.type === 'special' || card.isSpecial === 1) {
-            return 'background: #ef4444;';
-        }
-        
-        // スキルカード
-        if (card.type === 'skill') {
-            return 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);';
-        }
-        
-        // ミッションカードをカテゴリ別に色分け
-        if (card.type === 'mission') {
-            // カテゴリキャッシュから色を取得
-            const category = this.categoriesCache.find(cat => cat.id === card.categoryId);
-            if (category && category.color) {
-                return `background: ${category.color};`;
-            }
-            // デフォルト色（カテゴリが見つからない場合）
-            return 'background: #667eea;';
-        }
-        
-        // 職種カード（デフォルト）
-        return 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
     }
 
     connect() {
@@ -760,8 +722,25 @@ class GameClient {
                                     const isFlipped = this.flippedCards.has(card.id);
                                     const isDisabled = this.selectedCard && this.selectedCard.id !== card.id;
                                     
-                                    // ★★★ getCategoryColor()メソッドを使用 ★★★
-                                    const bgStyle = this.getCategoryColor(card);
+                                    let bgStyle = '';
+                                    if (card.type === 'skill') {
+                                        bgStyle = 'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);';
+                                    } else if (card.type === 'mission') {
+                                        bgStyle = 'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);';
+                                    } else if (card.type === 'special') {
+                                        bgStyle = 'background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);';
+                                    } else {
+                                        bgStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+                                    }
+                                    
+                                    // ★★★ ターゲット情報を取得して表示 ★★★
+                                    let targetInfo = '';
+                                    if ((card.type === 'mission' || card.type === 'special') && !isFlipped) {
+                                        const target = card[`target_${this.language}`] || card.target_en || '';
+                                        if (target) {
+                                            targetInfo = `<div style="font-size: 0.75rem; margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; line-height: 1.4;">${target}</div>`;
+                                        }
+                                    }
                                     
                                     return `
                                     <div class="simple-card ${isDisabled ? 'disabled' : ''}" style="${bgStyle}">
@@ -772,7 +751,10 @@ class GameClient {
                                                     <div>${card[`descriptionHtml_${this.language}`] || card.descriptionHtml_en || ''}</div>
                                                 </div>
                                             ` : `
-                                                ${card[`name_${this.language}`] || 'Card ' + (index + 1)}
+                                                <div style="padding: 10px;">
+                                                    <div style="font-weight: 700; font-size: 1.1rem;">${card[`name_${this.language}`] || 'Card ' + (index + 1)}</div>
+                                                    ${targetInfo}
+                                                </div>
                                             `}
                                         </div>
                                         <div class="simple-card-footer" onclick="event.stopPropagation(); game.flipCard(${card.id})">
@@ -789,11 +771,7 @@ class GameClient {
                         <div class="cards-area">
                             <h3 class="cards-title">${this.t('game.selectedCardsHistory')}</h3>
                             <div style="display: flex; flex-direction: column; gap: 10px;">
-                                ${this.session.selectedCardsHistory.slice().reverse().map((entry, index) => {
-                                    // ★★★ getCategoryColor()メソッドで動的に色を取得 ★★★
-                                    const cardBgColor = this.getCategoryColor(entry.card).replace('background: ', '');
-                                    
-                                    return `
+                                ${this.session.selectedCardsHistory.slice().reverse().map((entry, index) => `
                                     <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-dark); border-radius: 12px; border: 2px solid var(--border);">
                                         <div style="min-width: 80px; font-weight: 700; color: var(--text-secondary);">
                                             ${this.t('game.turn')} ${entry.turnNumber}
@@ -801,13 +779,12 @@ class GameClient {
                                         <div style="flex: 1;">
                                             <strong>${entry.playerName}</strong>
                                             <span style="margin: 0 10px; color: var(--text-secondary);">→</span>
-                                            <span style="padding: 4px 12px; background: ${cardBgColor}; border-radius: 6px; color: white;">
+                                            <span style="padding: 4px 12px; background: var(--card-${entry.card.type}); border-radius: 6px; color: white;">
                                                 ${entry.card[`name_${this.language}`] || entry.card.name_en || 'Card'}
                                             </span>
                                         </div>
                                     </div>
-                                    `;
-                                }).join('')}
+                                `).join('')}
                             </div>
                         </div>
                     ` : ''}
