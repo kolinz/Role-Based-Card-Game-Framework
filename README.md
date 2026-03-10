@@ -19,6 +19,8 @@
 
 本フレームワークは、仕様書（SDD）に基づいて開発された再現性の高いゲームエンジンです。
 ゲームロジック、カード構造、WebSocket 通信、管理画面 API、DB スキーマなどの仕様が明文化されており、教育機関・企業研修・OSS コントリビュータが 容易に導入・拡張できるように設計されています。
+- SDDのための[仕様書](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/SDD_Specification_v1.1.md)
+- 上記を用いた同様のプロジェクトの[再現実装プロンプト集](https://github.com/kolinz/Role-Based-Card-Game-Framework/blob/main/docs/SDD_Specification_v1.1.md)
 
 ## 資料ダウンロード操作
 Githubからファイルをダウンロードする場合は、下図のように「Download raw file」のアイコンをクリックしましょう。
