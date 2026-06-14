@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面 — Role-Based Card Game Framework</title>
+  <style>
+    /* ── リセット・ベース ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #1a1a2e;
+      --card-bg:     #16213e;
+      --surface:     #0f3460;
+      --primary:     #6366f1;
+      --primary-dark:#4f46e5;
+      --secondary:   #f59e0b;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --text:        #e2e8f0;
+      --text-sub:    #94a3b8;
+      --border:      rgba(255,255,255,0.1);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── ログイン画面 ─────────────────────────────────────────── */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+
+    .login-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+      color: var(--text);
+    }
+
+    /* ── 管理画面 ─────────────────────────────────────────────── */
+    #adminScreen {
+      display: none;
+    }
+
+    .admin-header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .admin-body {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ── タブ ─────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+    }
+
+    .tabs button {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-sub);
+      transition: background .18s, color .18s;
+    }
+
+    .tabs button:hover     { background: rgba(255,255,255,.07); color: var(--text); }
+    .tabs button.active    { background: var(--primary); color: #fff; }
+
+    /* ── タブコンテンツ ───────────────────────────────────────── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .tab-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tab-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    /* ── テーブル ─────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 500px;
+    }
+
+    thead th {
+      background: var(--surface);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-top: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    tbody tr:nth-child(even) { background: rgba(255,255,255,.025); }
+    tbody tr:hover           { background: rgba(99,102,241,.12); }
+
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    .td-actions { white-space: nowrap; display: flex; gap: 6px; }
+
+    /* ── CSV エリア ───────────────────────────────────────────── */
+    .csv-area {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .csv-area h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    #csv-preview {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-sub);
+      background: rgba(0,0,0,.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    /* ── フォーム部品 ────────────────────────────────────────── */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    input::placeholder, textarea::placeholder  { color: var(--text-sub); }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--card-bg); }
+
+    .checkboxes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .checkboxes label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500; color: var(--text);
+      text-transform: none; letter-spacing: 0;
+      cursor: pointer;
+    }
+    .checkboxes input[type="checkbox"] { cursor: pointer; accent-color: var(--primary); }
+
+    /* ── ボタン ──────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600;
+      font-family: inherit; border: none; border-radius: 8px;
+      cursor: pointer; transition: opacity .15s, transform .15s;
+      white-space: nowrap;
+    }
+    .btn:hover        { opacity: .85; transform: translateY(-1px); }
+    .btn:active       { transform: translateY(0); }
+    .btn:disabled     { opacity: .38; pointer-events: none; }
+
+    .btn-primary   { background: var(--primary);  color: #fff; }
+    .btn-secondary { background: rgba(255,255,255,.1); color: var(--text); border: 1px solid var(--border); }
+    .btn-success   { background: var(--success);  color: #fff; }
+    .btn-danger    { background: var(--danger);   color: #fff; }
+    .btn-sm        { padding: 5px 10px; font-size: 12px; }
+
+    /* ── モーダル ────────────────────────────────────────────── */
+    #cardModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #cardModal.open { display: flex; }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+
+    .modal-box h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ── エラー / 成功 ───────────────────────────────────────── */
+    #loginError {
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 8px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 18px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── レスポンシブ ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .table-wrap { border-radius: 8px; }
+      .admin-body { padding: 16px 12px; }
+      .tab-header { gap: 6px; }
+      .modal-box  { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     ログイン画面
+═════════════════════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>🔐 管理者ログイン</h1>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">ユーザー名</label>
+        <input type="text" id="username" placeholder="admin" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">パスワード</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;margin-top:4px;">
+        ログイン
+      </button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     管理画面
+═════════════════════════════════════════════════════════════ -->
+<div id="adminScreen">
+
+  <div class="admin-header">
+    <h1>🎴 RBCGF 管理画面</h1>
+    <button class="btn btn-secondary btn-sm" onclick="logout()">ログアウト</button>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- タブナビゲーション（Section 8.1）-->
+    <div class="tabs">
+      <button data-tab="categories"         class="active">職種カード</button>
+      <button data-tab="skill-types">スキル区分</button>
+      <button data-tab="skills">スキルカード</button>
+      <button data-tab="missions">ミッション</button>
+      <button data-tab="mission-categories">カテゴリ</button>
+    </div>
+
+    <!-- ── 職種カード タブ ──────────────────────────────────── -->
+    <div id="tab-categories" class="tab-content active">
+      <div class="tab-header">
+        <h2>職種カード <span id="categories-count" style="font-size:12px;color:var(--text-sub);"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('categories')">＋ 新規追加</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV('categories')">📥 CSV エクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>名前（日本語）</th><th>名前（英語）</th>
+            <th>目標ポイント</th><th>画像</th><th>操作</th>
+          </tr></thead>
+          <tbody id="categories-table"></tbody>
+        </table>
+      </div>
+      <div class="csv-area">
+        <h3>CSV インポート</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="csv-categories" accept=".csv"
+                 onchange="previewCSV('categories',this)" style="flex:1;min-width:160px;">
+          <button class="btn btn-success btn-sm" id="csv-confirm-categories"
+                  onclick="importCSV('categories')" style="display:none;">確定インポート</button>
+        </div>
+        <div id="csv-preview-categories" style="margin-top:10px;font-size:12px;color:var(--text-sub);
+             background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:none;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ── スキル区分 タブ（v1.2 新規）──────────────────────── -->
+    <div id="tab-skill-types" class="tab-content">
+      <div class="tab-header">
+        <h2>スキル区分 <span id="skill-types-count" style="font-size:12px;color:var(--text-sub);"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('skill-types')">＋ 新規追加</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV('skill-types')">📥 CSV エクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>名前（日本語）</th><th>名前（英語）</th>
+            <th>モデル</th><th>並び順</th><th>操作</th>
+          </tr></thead>
+          <tbody id="skill-types-table"></tbody>
+        </table>
+      </div>
+      <div class="csv-area">
+        <h3>CSV インポート</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="csv-skill-types" accept=".csv"
+                 onchange="previewCSV('skill-types',this)" style="flex:1;min-width:160px;">
+          <button class="btn btn-success btn-sm" id="csv-confirm-skill-types"
+                  onclick="importCSV('skill-types')" style="display:none;">確定インポート</button>
+        </div>
+        <div id="csv-preview-skill-types" style="margin-top:10px;font-size:12px;color:var(--text-sub);
+             background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:none;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ── スキルカード タブ ────────────────────────────────── -->
+    <div id="tab-skills" class="tab-content">
+      <div class="tab-header">
+        <h2>スキルカード <span id="skills-count" style="font-size:12px;color:var(--text-sub);"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('skills')">＋ 新規追加</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV('skills')">📥 CSV エクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>名前（日本語）</th><th>名前（英語）</th>
+            <th>対応職種</th><th>画像</th><th>操作</th>
+          </tr></thead>
+          <tbody id="skills-table"></tbody>
+        </table>
+      </div>
+      <div class="csv-area">
+        <h3>CSV インポート</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="csv-skills" accept=".csv"
+                 onchange="previewCSV('skills',this)" style="flex:1;min-width:160px;">
+          <button class="btn btn-success btn-sm" id="csv-confirm-skills"
+                  onclick="importCSV('skills')" style="display:none;">確定インポート</button>
+        </div>
+        <div id="csv-preview-skills" style="margin-top:10px;font-size:12px;color:var(--text-sub);
+             background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:none;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ── ミッション タブ ──────────────────────────────────── -->
+    <div id="tab-missions" class="tab-content">
+      <div class="tab-header">
+        <h2>ミッション <span id="missions-count" style="font-size:12px;color:var(--text-sub);"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('missions')">＋ 新規追加</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV('missions')">📥 CSV エクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>名前（日本語）</th><th>カテゴリ</th>
+            <th>対象</th><th>特殊</th><th>操作</th>
+          </tr></thead>
+          <tbody id="missions-table"></tbody>
+        </table>
+      </div>
+      <div class="csv-area">
+        <h3>CSV インポート</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="csv-missions" accept=".csv"
+                 onchange="previewCSV('missions',this)" style="flex:1;min-width:160px;">
+          <button class="btn btn-success btn-sm" id="csv-confirm-missions"
+                  onclick="importCSV('missions')" style="display:none;">確定インポート</button>
+        </div>
+        <div id="csv-preview-missions" style="margin-top:10px;font-size:12px;color:var(--text-sub);
+             background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;display:none;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ── ミッションカテゴリ タブ ──────────────────────────── -->
+    <div id="tab-mission-categories" class="tab-content">
+      <div class="tab-header">
+        <h2>ミッションカテゴリ <span id="mission-categories-count" style="font-size:12px;color:var(--text-sub);"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('mission-categories')">＋ 新規追加</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV('mission-categories')">📥 CSV エクスポート</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>名前（日本語）</th><th>名前（英語）</th>
+            <th>並び順</th><th>操作</th>
+          </tr></thead>
+          <tbody id="mission-categories-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /.admin-body -->
+</div><!-- /#adminScreen -->
+
+<!-- ════════════════════════════════════════════════════════════
+     モーダル（追加 / 編集フォーム）
+═════════════════════════════════════════════════════════════ -->
+<div id="cardModal">
+  <div class="modal-box">
+    <h2 id="modalTitle">カードを追加</h2>
+    <div id="modalForm"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary"   onclick="saveCard()">保存</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════
+// 状態変数
+// ════════════════════════════════════════════════════════════════
+let adminToken      = localStorage.getItem('admin_token');
+let currentTab      = 'categories';
+let editingId       = null;
+let currentCsvData  = null;
+let currentCsvType  = null;
+let allData = {
+    categories:        [],
+    skillTypes:        [],
+    skills:            [],
+    missions:          [],
+    missionCategories: [],
+};
+
+// ════════════════════════════════════════════════════════════════
+// 初期化
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    // タブ切り替え
+    document.querySelectorAll('.tabs button[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    // ログインフォーム
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await login();
+    });
+
+    // 既存トークンがあれば自動ログイン
+    if (adminToken) {
+        showAdminScreen();
+        loadData();
+    }
+});
+
+// ════════════════════════════════════════════════════════════════
+// ログイン / ログアウト
+// ════════════════════════════════════════════════════════════════
+async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl    = document.getElementById('loginError');
+    errEl.textContent = '';
+
+    try {
+        const res  = await fetch('/api/auth/login', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            adminToken = data.token;
+            localStorage.setItem('admin_token', adminToken);
+            showAdminScreen();
+            await loadData();
+        } else {
+            errEl.textContent = 'ユーザー名またはパスワードが正しくありません';
+        }
+    } catch (e) {
+        errEl.textContent = 'サーバーに接続できませんでした';
+    }
+}
+
+function logout() {
+    adminToken = null;
+    localStorage.removeItem('admin_token');
+    document.getElementById('adminScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display  = 'flex';
+}
+
+function showAdminScreen() {
+    document.getElementById('loginScreen').style.display  = 'none';
+    document.getElementById('adminScreen').style.display  = 'block';
+}
+
+function authHeaders() {
+    return {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+    };
+}
+
+// ════════════════════════════════════════════════════════════════
+// データ取得
+// ════════════════════════════════════════════════════════════════
+async function loadData() {
+    try {
+        const [cats, sts, skills, missions, mc] = await Promise.all([
+            fetch('/api/cards/categories').then(r => r.json()),
+            fetch('/api/cards/skill-types').then(r => r.json()),
+            fetch('/api/cards/skills').then(r => r.json()),
+            fetch('/api/cards/missions').then(r => r.json()),
+            fetch('/api/cards/mission-categories').then(r => r.json()),
+        ]);
+        allData = {
+            categories:        Array.isArray(cats)    ? cats    : [],
+            skillTypes:        Array.isArray(sts)     ? sts     : [],
+            skills:            Array.isArray(skills)  ? skills  : [],
+            missions:          Array.isArray(missions)? missions: [],
+            missionCategories: Array.isArray(mc)      ? mc      : [],
+        };
+        renderTable(currentTab);
+        // 件数バッジ更新
+        document.getElementById('categories-count').textContent        = `(${allData.categories.length})`;
+        document.getElementById('skill-types-count').textContent       = `(${allData.skillTypes.length})`;
+        document.getElementById('skills-count').textContent            = `(${allData.skills.length})`;
+        document.getElementById('missions-count').textContent          = `(${allData.missions.length})`;
+        document.getElementById('mission-categories-count').textContent= `(${allData.missionCategories.length})`;
+    } catch (e) {
+        showToast('データ取得に失敗しました: ' + e.message, 'danger');
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
+// タブ切り替え
+// ════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tabs button[data-tab]').forEach(b =>
+        b.classList.toggle('active', b.dataset.tab === tab)
+    );
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const target = document.getElementById(`tab-${tab}`);
+    if (target) target.classList.add('active');
+    renderTable(tab);
+}
+
+// ════════════════════════════════════════════════════════════════
+// テーブル描画
+// ════════════════════════════════════════════════════════════════
+function renderTable(type) {
+    const tbody = document.getElementById(`${type}-table`);
+    if (!tbody) return;
+
+    let rows = '';
+
+    if (type === 'categories') {
+        allData.categories.forEach(r => {
+            const img = r.imageUrl
+                ? `<img src="${r.imageUrl}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;">`
+                : '<span style="color:var(--text-sub);">—</span>';
+            rows += `<tr>
+                <td>${r.id}</td>
+                <td>${esc(r.name_ja)}</td>
+                <td>${esc(r.name_en)}</td>
+                <td><span style="color:var(--secondary);font-weight:700;">${r.targetPoints}pt</span></td>
+                <td>${img}</td>
+                <td><div class="td-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('categories',${r.id})">編集</button>
+                    <button class="btn btn-danger btn-sm"    onclick="deleteCard('categories',${r.id})">削除</button>
+                </div></td>
+            </tr>`;
+        });
+    } else if (type === 'skill-types') {
+        allData.skillTypes.forEach(r => {
+            rows += `<tr>
+                <td>${r.id}</td>
+                <td>${esc(r.name_ja)}</td>
+                <td>${esc(r.name_en)}</td>
+                <td><span style="color:var(--primary);font-size:11px;font-weight:600;
+                    padding:2px 8px;border-radius:20px;background:rgba(99,102,241,.2);">
+                    ${esc(r.model_type)}</span></td>
+                <td>${r.sortOrder ?? 0}</td>
+                <td><div class="td-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('skill-types',${r.id})">編集</button>
+                    <button class="btn btn-danger btn-sm"    onclick="deleteCard('skill-types',${r.id})">削除</button>
+                </div></td>
+            </tr>`;
+        });
+    } else if (type === 'skills') {
+        allData.skills.forEach(r => {
+            // matchesCategories → 職種名リスト
+            const catNames = r.matchesCategories
+                ? r.matchesCategories.split(',').map(id => {
+                    const cat = allData.categories.find(c => c.id === Number(id));
+                    return cat ? `<span style="font-size:11px;padding:2px 6px;border-radius:10px;
+                        background:rgba(99,102,241,.2);color:var(--primary);">${esc(cat.name_ja)}</span>` : '';
+                  }).join(' ')
+                : '<span style="color:var(--text-sub);">—</span>';
+            const img = r.imageUrl
+                ? `<img src="${r.imageUrl}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;">`
+                : '—';
+            rows += `<tr>
+                <td>${r.id}</td>
+                <td>${esc(r.name_ja)}</td>
+                <td>${esc(r.name_en)}</td>
+                <td>${catNames}</td>
+                <td>${img}</td>
+                <td><div class="td-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('skills',${r.id})">編集</button>
+                    <button class="btn btn-danger btn-sm"    onclick="deleteCard('skills',${r.id})">削除</button>
+                </div></td>
+            </tr>`;
+        });
+    } else if (type === 'missions') {
+        allData.missions.forEach(r => {
+            const catName = allData.missionCategories.find(c => c.id === r.categoryId)?.name_ja ?? '—';
+            rows += `<tr>
+                <td>${r.id}</td>
+                <td>${esc(r.name_ja ?? '')}</td>
+                <td>${esc(catName)}</td>
+                <td>${esc(r.target_ja ?? '')}</td>
+                <td>${r.isSpecial
+                    ? '<span style="color:var(--danger);font-weight:700;">特殊</span>'
+                    : '<span style="color:var(--text-sub);">通常</span>'}</td>
+                <td><div class="td-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('missions',${r.id})">編集</button>
+                    <button class="btn btn-danger btn-sm"    onclick="deleteCard('missions',${r.id})">削除</button>
+                </div></td>
+            </tr>`;
+        });
+    } else if (type === 'mission-categories') {
+        allData.missionCategories.forEach(r => {
+            rows += `<tr>
+                <td>${r.id}</td>
+                <td>${esc(r.name_ja)}</td>
+                <td>${esc(r.name_en)}</td>
+                <td>${r.sortOrder ?? 0}</td>
+                <td><div class="td-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openModal('mission-categories',${r.id})">編集</button>
+                    <button class="btn btn-danger btn-sm"    onclick="deleteCard('mission-categories',${r.id})">削除</button>
+                </div></td>
+            </tr>`;
+        });
+    }
+
+    tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:20px;">データがありません</td></tr>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+// モーダル（フォーム生成）
+// ════════════════════════════════════════════════════════════════
+function openModal(type, id = null) {
+    editingId = id;
+    const modal    = document.getElementById('cardModal');
+    const titleEl  = document.getElementById('modalTitle');
+    const formEl   = document.getElementById('modalForm');
+
+    // 既存データ取得
+    let rec = null;
+    if (id !== null) {
+        const map = {
+            categories: allData.categories,
+            'skill-types': allData.skillTypes,
+            skills: allData.skills,
+            missions: allData.missions,
+            'mission-categories': allData.missionCategories,
+        };
+        rec = (map[type] ?? []).find(r => r.id === id) ?? null;
+    }
+    titleEl.textContent = rec ? `${typeLabel(type)} を編集` : `${typeLabel(type)} を追加`;
+
+    formEl.innerHTML = buildForm(type, rec);
+    modal.classList.add('open');
+
+    // 画像プレビュー初期化
+    const imgInput = formEl.querySelector('[data-image-input]');
+    if (imgInput && rec?.imageUrl) {
+        const preview = document.getElementById('img-preview');
+        if (preview) { preview.src = rec.imageUrl; preview.style.display = 'block'; }
+    }
+}
+
+function closeModal() {
+    document.getElementById('cardModal').classList.remove('open');
+    editingId = null;
+}
+
+function typeLabel(type) {
+    return { categories:'職種カード', 'skill-types':'スキル区分',
+             skills:'スキルカード', missions:'ミッション', 'mission-categories':'カテゴリ' }[type] ?? type;
+}
+
+function buildForm(type, rec) {
+    const v  = (key, def='') => esc(rec?.[key] ?? def);
+    const vn = (key, def=0)  => rec?.[key] ?? def;
+
+    if (type === 'categories') {
+        return `
+<div class="form-group"><label>名前（日本語）</label>
+  <input type="text" id="f-name_ja" value="${v('name_ja')}" required></div>
+<div class="form-group"><label>名前（英語）</label>
+  <input type="text" id="f-name_en" value="${v('name_en')}" required></div>
+<div class="form-group"><label>目標ポイント</label>
+  <input type="number" id="f-targetPoints" value="${vn('targetPoints',3)}" min="1" max="20"></div>
+<div class="form-group"><label>説明（日本語 HTML）</label>
+  <textarea id="f-descriptionHtml_ja">${v('descriptionHtml_ja')}</textarea></div>
+<div class="form-group"><label>説明（英語 HTML）</label>
+  <textarea id="f-descriptionHtml_en">${v('descriptionHtml_en')}</textarea></div>
+<div class="form-group"><label>画像</label>
+  <input type="file" accept="image/*" onchange="handleImageUpload(event,'f-imageUrl')" data-image-input>
+  ${rec?.imageUrl ? `<img id="img-preview" src="${rec.imageUrl}" style="margin-top:8px;max-width:120px;border-radius:6px;display:block;">` : '<img id="img-preview" style="display:none;max-width:120px;border-radius:6px;margin-top:8px;">'}
+  <input type="hidden" id="f-imageUrl" value="${v('imageUrl')}"></div>`;
+
+    } else if (type === 'skill-types') {
+        return `
+<div class="form-group"><label>名前（日本語）</label>
+  <input type="text" id="f-name_ja" value="${v('name_ja')}" required></div>
+<div class="form-group"><label>名前（英語）</label>
+  <input type="text" id="f-name_en" value="${v('name_en')}" required></div>
+<div class="form-group"><label>モデル種別</label>
+  <div style="padding:8px 12px;background:rgba(99,102,241,.12);border-radius:8px;
+      font-size:13px;color:var(--primary);font-weight:600;">katz（固定）</div>
+  <input type="hidden" id="f-model_type" value="katz"></div>
+<div class="form-group"><label>並び順</label>
+  <input type="number" id="f-sortOrder" value="${vn('sortOrder',0)}" min="0"></div>
+<div class="form-group"><label>説明（日本語）</label>
+  <textarea id="f-description_ja">${v('description_ja')}</textarea></div>
+<div class="form-group"><label>説明（英語）</label>
+  <textarea id="f-description_en">${v('description_en')}</textarea></div>`;
+
+    } else if (type === 'skills') {
+        const selIds = rec?.matchesCategories
+            ? rec.matchesCategories.split(',').map(Number) : [];
+        const checkboxes = allData.categories.map(cat =>
+            `<label><input type="checkbox" name="matchesCategories" value="${cat.id}"
+                ${selIds.includes(cat.id) ? 'checked' : ''}> ${esc(cat.name_ja)}</label>`
+        ).join('');
+        return `
+<div class="form-group"><label>名前（日本語）</label>
+  <input type="text" id="f-name_ja" value="${v('name_ja')}" required></div>
+<div class="form-group"><label>名前（英語）</label>
+  <input type="text" id="f-name_en" value="${v('name_en')}" required></div>
+<div class="form-group"><label>対応職種（matchesCategories）</label>
+  <div class="checkboxes">${checkboxes}</div></div>
+<div class="form-group"><label>説明（日本語 HTML）</label>
+  <textarea id="f-descriptionHtml_ja">${v('descriptionHtml_ja')}</textarea></div>
+<div class="form-group"><label>説明（英語 HTML）</label>
+  <textarea id="f-descriptionHtml_en">${v('descriptionHtml_en')}</textarea></div>
+<div class="form-group"><label>画像</label>
+  <input type="file" accept="image/*" onchange="handleImageUpload(event,'f-imageUrl')" data-image-input>
+  ${rec?.imageUrl ? `<img id="img-preview" src="${rec.imageUrl}" style="margin-top:8px;max-width:120px;border-radius:6px;display:block;">` : '<img id="img-preview" style="display:none;max-width:120px;border-radius:6px;margin-top:8px;">'}
+  <input type="hidden" id="f-imageUrl" value="${v('imageUrl')}"></div>`;
+
+    } else if (type === 'missions') {
+        const catOptions = allData.missionCategories.map(c =>
+            `<option value="${c.id}" ${rec?.categoryId === c.id ? 'selected' : ''}>${esc(c.name_ja)}</option>`
+        ).join('');
+        return `
+<div class="form-group"><label>名前（日本語）</label>
+  <input type="text" id="f-name_ja" value="${v('name_ja')}"></div>
+<div class="form-group"><label>名前（英語）</label>
+  <input type="text" id="f-name_en" value="${v('name_en')}"></div>
+<div class="form-group"><label>説明（日本語 HTML）</label>
+  <textarea id="f-descriptionHtml_ja" required>${v('descriptionHtml_ja')}</textarea></div>
+<div class="form-group"><label>説明（英語 HTML）</label>
+  <textarea id="f-descriptionHtml_en" required>${v('descriptionHtml_en')}</textarea></div>
+<div class="form-group"><label>カテゴリ</label>
+  <select id="f-categoryId"><option value="">— なし —</option>${catOptions}</select></div>
+<div class="form-group"><label>対象</label>
+  <select id="f-target_ja">
+    <option value="個人" ${rec?.target_ja==='個人'?'selected':''}>個人</option>
+    <option value="チーム" ${rec?.target_ja==='チーム'?'selected':''}>チーム</option>
+  </select></div>
+<div class="form-group"><label>対象（英語）</label>
+  <select id="f-target_en">
+    <option value="Individual" ${rec?.target_en==='Individual'?'selected':''}>Individual</option>
+    <option value="Team"       ${rec?.target_en==='Team'      ?'selected':''}>Team</option>
+  </select></div>
+<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+  <input type="checkbox" id="f-isSpecial" ${rec?.isSpecial?'checked':''}>
+  特殊ミッション（isSpecial）
+</label></div>`;
+
+    } else if (type === 'mission-categories') {
+        return `
+<div class="form-group"><label>名前（日本語）</label>
+  <input type="text" id="f-name_ja" value="${v('name_ja')}" required></div>
+<div class="form-group"><label>名前（英語）</label>
+  <input type="text" id="f-name_en" value="${v('name_en')}" required></div>
+<div class="form-group"><label>説明（日本語）</label>
+  <textarea id="f-description_ja">${v('description_ja')}</textarea></div>
+<div class="form-group"><label>説明（英語）</label>
+  <textarea id="f-description_en">${v('description_en')}</textarea></div>
+<div class="form-group"><label>並び順</label>
+  <input type="number" id="f-sortOrder" value="${vn('sortOrder',0)}" min="0"></div>`;
+    }
+    return '';
+}
+
+function gv(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+}
+
+// ════════════════════════════════════════════════════════════════
+// 保存 / 削除
+// ════════════════════════════════════════════════════════════════
+async function saveCard() {
+    const type = currentTab;
+    let body   = {};
+
+    if (type === 'categories') {
+        body = {
+            name_ja: gv('f-name_ja'), name_en: gv('f-name_en'),
+            targetPoints: Number(gv('f-targetPoints')),
+            descriptionHtml_ja: gv('f-descriptionHtml_ja'),
+            descriptionHtml_en: gv('f-descriptionHtml_en'),
+            imageUrl: gv('f-imageUrl') || null,
+        };
+    } else if (type === 'skill-types') {
+        body = {
+            name_ja: gv('f-name_ja'), name_en: gv('f-name_en'),
+            model_type: 'katz',
+            sortOrder: Number(gv('f-sortOrder')),
+            description_ja: gv('f-description_ja'),
+            description_en: gv('f-description_en'),
+        };
+    } else if (type === 'skills') {
+        const checked = [...document.querySelectorAll('input[name="matchesCategories"]:checked')]
+            .map(el => el.value).join(',');
+        body = {
+            name_ja: gv('f-name_ja'), name_en: gv('f-name_en'),
+            matchesCategories: checked || null,
+            descriptionHtml_ja: gv('f-descriptionHtml_ja'),
+            descriptionHtml_en: gv('f-descriptionHtml_en'),
+            imageUrl: gv('f-imageUrl') || null,
+        };
+    } else if (type === 'missions') {
+        body = {
+            name_ja: gv('f-name_ja'), name_en: gv('f-name_en'),
+            descriptionHtml_ja: gv('f-descriptionHtml_ja'),
+            descriptionHtml_en: gv('f-descriptionHtml_en'),
+            categoryId: gv('f-categoryId') || null,
+            target_ja: gv('f-target_ja'), target_en: gv('f-target_en'),
+            isSpecial: document.getElementById('f-isSpecial')?.checked ? 1 : 0,
+        };
+    } else if (type === 'mission-categories') {
+        body = {
+            name_ja: gv('f-name_ja'), name_en: gv('f-name_en'),
+            description_ja: gv('f-description_ja'),
+            description_en: gv('f-description_en'),
+            sortOrder: Number(gv('f-sortOrder')),
+        };
+    }
+
+    try {
+        const url    = editingId ? `/api/admin/${type}/${editingId}` : `/api/admin/${type}`;
+        const method = editingId ? 'PUT' : 'POST';
+        const res    = await fetch(url, {
+            method, headers: authHeaders(), body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            closeModal();
+            showToast(editingId ? '✅ 更新しました' : '✅ 追加しました', 'success');
+            await loadData();
+        } else {
+            showToast('❌ ' + (data.error?.message ?? '保存に失敗しました'), 'danger');
+        }
+    } catch (e) {
+        showToast('❌ 通信エラー: ' + e.message, 'danger');
+    }
+}
+
+async function deleteCard(type, id) {
+    if (!confirm('本当に削除しますか？')) return;
+    try {
+        const res  = await fetch(`/api/admin/${type}/${id}`, {
+            method: 'DELETE', headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            showToast('🗑️ 削除しました', 'success');
+            await loadData();
+        } else {
+            showToast('❌ 削除に失敗しました', 'danger');
+        }
+    } catch (e) {
+        showToast('❌ 通信エラー: ' + e.message, 'danger');
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 画像アップロード（リサイズ + Base64）
+// ════════════════════════════════════════════════════════════════
+function handleImageUpload(event, targetInputId) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const MAX = 800;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+                const ratio = Math.min(MAX / w, MAX / h);
+                w = Math.round(w * ratio);
+                h = Math.round(h * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+            let quality = 0.75;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+            // 2MB 超なら品質 0.5 で再エンコード
+            if (dataUrl.length > 2 * 1024 * 1024 * 1.33) {
+                dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            }
+
+            document.getElementById(targetInputId).value = dataUrl;
+            const preview = document.getElementById('img-preview');
+            if (preview) { preview.src = dataUrl; preview.style.display = 'block'; }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ════════════════════════════════════════════════════════════════
+// CSV エクスポート
+// ════════════════════════════════════════════════════════════════
+function exportCSV(type) {
+    const dataMap = {
+        categories:          allData.categories,
+        'skill-types':       allData.skillTypes,
+        skills:              allData.skills,
+        missions:            allData.missions,
+        'mission-categories':allData.missionCategories,
+    };
+    const rows = dataMap[type] ?? [];
+    if (!rows.length) return showToast('データがありません', 'danger');
+
+    const headers = Object.keys(rows[0]);
+    const csv     = [
+        headers.join(','),
+        ...rows.map(r =>
+            headers.map(h => {
+                const v = r[h] ?? '';
+                return String(v).includes(',') || String(v).includes('"') || String(v).includes('\n')
+                    ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+            }).join(',')
+        ),
+    ].join('\r\n');
+
+    // UTF-8 BOM 付きダウンロード
+    const bom  = '\uFEFF';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${type}_export_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 CSVをエクスポートしました', 'success');
+}
+
+// ════════════════════════════════════════════════════════════════
+// CSV インポート（プレビュー → 確定）
+// ════════════════════════════════════════════════════════════════
+function parseCSV(text) {
+    const lines   = text.replace(/\r/g, '').split('\n').filter(Boolean);
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    return lines.slice(1).map(line => {
+        const vals = [];
+        let cur = '', inQ = false;
+        for (const ch of line) {
+            if (ch === '"') { inQ = !inQ; }
+            else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+            else { cur += ch; }
+        }
+        vals.push(cur.trim());
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = vals[i] ?? ''; });
+        return obj;
+    });
+}
+
+async function previewCSV(type, input) {
+    const file = input.files[0];
+    if (!file) return;
+    currentCsvType = type;
+
+    const text   = await file.text();
+    const parsed = parseCSV(text.replace(/^\uFEFF/, '')); // BOM 除去
+    currentCsvData = parsed;
+
+    const previewEl  = document.getElementById(`csv-preview-${type}`);
+    const confirmBtn = document.getElementById(`csv-confirm-${type}`);
+
+    if (previewEl) {
+        previewEl.style.display = 'block';
+        previewEl.textContent   =
+            `${parsed.length} 件を検出
+` +
+            `  新規追加（id なし）: ${parsed.filter(r => !r.id).length} 件
+` +
+            `  更新（id あり）:     ${parsed.filter(r =>  r.id).length} 件
+
+` +
+            `先頭データ:
+${JSON.stringify(parsed[0], null, 2)}`;
+    }
+    if (confirmBtn) confirmBtn.style.display = 'inline-flex';
+}
+
+async function importCSV(type) {
+    if (!currentCsvData || !currentCsvType) return;
+    try {
+        const res  = await fetch(`/api/admin/import/${currentCsvType}`, {
+            method:  'POST',
+            headers: authHeaders(),
+            body:    JSON.stringify({ csvData: currentCsvData, preview: false }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            showToast(`✅ インポート完了: 追加 ${data.inserted} / 更新 ${data.updated}`, 'success');
+            const previewEl  = document.getElementById(`csv-preview-${type}`);
+            const confirmBtn = document.getElementById(`csv-confirm-${type}`);
+            if (previewEl)  previewEl.style.display  = 'none';
+            if (confirmBtn) confirmBtn.style.display = 'none';
+            currentCsvData = null; currentCsvType = null;
+            await loadData();
+        } else {
+            showToast('❌ インポート失敗: ' + (data.error?.message ?? ''), 'danger');
+        }
+    } catch (e) {
+        showToast('❌ 通信エラー: ' + e.message, 'danger');
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
+// ユーティリティ
+// ════════════════════════════════════════════════════════════════
+function esc(str) {
+    return String(str ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type = 'success') {
+    const colors = { success: '#10b981', danger: '#ef4444', info: '#6366f1' };
+    const toast  = document.createElement('div');
+    toast.className   = 'toast';
+    toast.textContent = msg;
+    toast.style.borderColor = colors[type] ?? colors.info;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+
+</body>
+</html>

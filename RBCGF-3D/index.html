@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>職種 × スキル カードゲーム</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* ── CSS 変数 ──────────────────────────────────────────────── */
+    :root {
+      --primary:        #6366f1;
+      --primary-dark:   #4f46e5;
+      --secondary:      #f59e0b;
+      --success:        #10b981;
+      --danger:         #ef4444;
+      --bg:             #0f0f23;
+      --card-bg:        #1a1a3e;
+      --text:           #e2e8f0;
+      --text-secondary: #94a3b8;
+      --border:         rgba(255,255,255,0.1);
+    }
+
+    /* ── リセット・ベース ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── CSS アニメーション（Section 19）────────────────────────── */
+    /* カードのスライドアップ */
+    @keyframes su {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* 結果モーダルのフェードアウト */
+    @keyframes fo {
+      to { opacity: 0; transform: scale(0.94); }
+    }
+    /* スコアバーのピップ点灯 */
+    @keyframes pip {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── 接続状態インジケーター ─────────────────────────────────── */
+    #connection-indicator {
+      position: fixed;
+      bottom: 52px; right: 16px;
+      z-index: 9999;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    /* ── #app レイアウト（Three.js × HTML overlay 分離）─────────── */
+    #app {
+      position: relative;
+      width: 100%; height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Layer 1: Three.js canvas */
+    #scene-container {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* Layer 2: ラベル等（pointer-events なし）*/
+    #ui-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Layer 3: スコアバー・カード・ボタン */
+    #ui-interactive {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
+
+    /* ── 言語切り替え ────────────────────────────────────────────── */
+    .lang-toggle {
+      position: fixed;
+      top: 12px; right: 110px;
+      z-index: 9999;
+      display: flex;
+      gap: 4px;
+    }
+    .lang-toggle button {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lang-toggle button:hover,
+    .lang-toggle button.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ── カード系コンポーネント ─────────────────────────────────── */
+    .simple-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .simple-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.2);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── ボタン ─────────────────────────────────────────────────── */
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover  { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+    .btn-secondary:hover{ transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .btn-danger:hover   { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(239,68,68,0.4); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled,
+    .btn-danger:disabled {
+      opacity: 0.38;
+      pointer-events: none;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── モーダル ────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: su 0.25s ease both;
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* ── テキスト入力 ────────────────────────────────────────────── */
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--primary);
+    }
+    input::placeholder { color: var(--text-secondary); }
+
+    /* ── スクロールバー ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+    /* ── ユーティリティ ──────────────────────────────────────────── */
+    .text-secondary { color: var(--text-secondary); }
+    .text-center    { text-align: center; }
+    .mt-8  { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+  <!-- 接続状態インジケーター -->
+  <div id="connection-indicator">🔴 Disconnected</div>
+
+  <!-- アプリルート -->
+  <div id="app">
+    <!-- Layer 1: Three.js canvas がここに挿入される -->
+    <div id="scene-container" style="position:absolute;inset:0;z-index:1;"></div>
+
+    <!-- Layer 2: プレイヤーラベル等（pointer-events なし）-->
+    <div id="ui-overlay"     style="position:absolute;inset:0;z-index:2;pointer-events:none;"></div>
+
+    <!-- Layer 3: スコアバー・カード・ボタン -->
+    <div id="ui-interactive" style="position:absolute;inset:0;z-index:3;"></div>
+  </div>
+
+  <!-- ゲームクライアント -->
+  <script src="game.js"></script>
+
+</body>
+</html>
