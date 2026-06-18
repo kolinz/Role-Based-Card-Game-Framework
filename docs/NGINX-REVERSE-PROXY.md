@@ -82,6 +82,7 @@ server {
 
         # WebSocketタイムアウト
         proxy_read_timeout 86400;
+       }
 }
 ```
 ## 設定ファイルのチェック
