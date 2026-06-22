@@ -157,6 +157,16 @@ npm start
 Role Based Card Game Framework のパスが、/home/ubuntu/Role-Based-Card-Game-Framework とする場合 について述べます。パスが異なる場合は、適宜読み替えてください。
 Ubutnu を前提にしています。後述の意味が分かる人は、Ubuntu以外のRedHat系でも問題ないはずなので、適宜読み替えてください。
 
+#### node のパスを探す
+下記のコマンドを実行します。
+```
+which node
+```
+実行結果例 : ログインしているユーザー名が ubuntu の場合
+```
+/home/ubuntu/.nvm/versions/node/v24.14.1/bin/node
+```
+
 #### systemd サービスファイルの作成
 下記のコマンドを実行します。
 ```
